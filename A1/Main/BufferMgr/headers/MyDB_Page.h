@@ -1,15 +1,68 @@
 #ifndef PAGE_H
 #define PAGE_H
 
-class MyDB_Page {
-    public:
-        //constructor
-        MyDB_Page();
-        //destructor
-        ~MyDB_Page();
+#include "../../Catalog/headers/MyDB_Table.h"
+#include "MyDB_BufferManager.h"
 
-    private:
-        //add code
+class MyDB_Page;
+typedef shared_ptr<MyDB_Page> MyDB_PagePtr;
+
+class MyDB_BufferManager;
+
+class MyDB_Page {
+
+public:
+    //constructor
+    MyDB_Page(MyDB_TablePtr table, size_t offset, MyDB_BufferManager &bufferManager);
+    //destructor
+    ~MyDB_Page();
+
+    size_t getRefCount() const;
+
+    void addRefCount();
+
+    void reduceRefCount();
+
+    void* getBytes();
+
+    void wroteBytes();
+
+    bool isDirty() const;
+
+    bool isPinned() const;
+
+    void setDirty(bool d);
+
+    void setPin(bool p);
+
+    void setBytes(void* ram);
+
+    size_t getOffset() const;
+
+
+
+private:
+
+    //parent buffer manager
+    MyDB_BufferManager &bufferManager;
+
+    //parent table
+    MyDB_TablePtr table;
+
+    //position of the page
+    size_t offset;
+
+    //whether it has been written
+    bool dirty;
+
+    //whether the page is pinned
+    bool pinned;
+
+    //number of reference to the page
+    size_t refCount;
+
+    //pointer to raw bytes
+    void *bytes;
 };
 
 #endif //PAGE_H
