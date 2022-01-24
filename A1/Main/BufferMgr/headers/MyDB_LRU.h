@@ -10,15 +10,13 @@ using namespace std;
 class Node {
 
 public:
-//    explicit Node(MyDB_PagePtr page);
-    explicit Node(int val);
+    explicit Node(MyDB_PagePtr page);
 
     Node *next;
 
     Node *prev;
 
-//    MyDB_PagePtr page;
-    int val;
+    MyDB_PagePtr page;
 
 };
 
@@ -40,16 +38,13 @@ public:
 
     Node* popTail();
 
-//    Node* findNode(const pair<MyDB_TablePtr, size_t>& id);
-    Node* findNode(int id);
+    Node* findNode(const pair<MyDB_TablePtr, size_t>& id);
 
-//    Node* addToMap(pair<MyDB_TablePtr, size_t> id, MyDB_PagePtr page);
-    Node* addToMap(int id, int val);
+    Node* addToMap(pair<MyDB_TablePtr, size_t> id, MyDB_PagePtr page);
 
     int getSize() const;
 
     void eraseNode(Node *node);
-
 
 private:
     //capacity of LRU
@@ -62,8 +57,7 @@ private:
     size_t size;
 
     //map of the LRU
-//    map<pair<MyDB_TablePtr, size_t>, Node*> map;
-    map<int, Node*> map;
+    map<pair<MyDB_TablePtr, size_t>, Node*> map;
 
     Node *head;
 

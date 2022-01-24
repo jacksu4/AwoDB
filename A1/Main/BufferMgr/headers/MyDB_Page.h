@@ -2,7 +2,6 @@
 #define PAGE_H
 
 #include "../../Catalog/headers/MyDB_Table.h"
-#include "MyDB_BufferManager.h"
 
 class MyDB_Page;
 typedef shared_ptr<MyDB_Page> MyDB_PagePtr;

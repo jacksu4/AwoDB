@@ -6,15 +6,15 @@
 
 using namespace std;
 
-//Node::Node(MyDB_PagePtr page): page(page), next(nullptr), prev(nullptr) {
-//}
+Node::Node(MyDB_PagePtr page): page(page), next(nullptr), prev(nullptr) {
+}
 
-//LRU::LRU(size_t capacity, MyDB_BufferManager &bufferManager): capacity(capacity), bufferManager(bufferManager), size(0) {
-//    head = new Node(nullptr);
-//    tail = new Node(nullptr);
-//    head->next = tail;
-//    tail->prev = head;
-//}
+LRU::LRU(size_t capacity, MyDB_BufferManager &bufferManager): capacity(capacity), bufferManager(bufferManager), size(0) {
+    head = new Node(nullptr);
+    tail = new Node(nullptr);
+    head->next = tail;
+    tail->prev = head;
+}
 
 LRU::~LRU() {
 
@@ -30,7 +30,8 @@ void LRU::remove(Node *node) {
 }
 
 void LRU::addToHead(Node *node) {
-    node->next = node->prev->next;
+    node->prev = head;
+    node->next = head->next;
     head->next->prev = node;
     head->next = node;
 }
@@ -47,60 +48,7 @@ Node *LRU::popTail() {
     //TODO: add pin functionality
 }
 
-//Node *LRU::findNode(const pair<MyDB_TablePtr, size_t>& id) {
-//    if(map.find(id) != map.end()) {
-//        Node *curr = map.find(id)->second;
-//        moveToHead(curr);
-//        return curr;
-//    } else {
-//        return nullptr;
-//    }
-//}
-
-//Node *LRU::addToMap(pair<MyDB_TablePtr, size_t> id, MyDB_PagePtr page) {
-//    //TODO: modify based on buffer manager
-//    size++;
-//    Node *node = new Node(page);
-//    map[make_pair(id.first, id.second)] = node;
-//    addToHead(node);
-//    return node;
-//}
-
-int LRU::getSize() const {
-    return this->size;
-}
-
-//void LRU::eraseNode(Node *node) {
-//    remove(node);
-//    //TODO: modify based on buffer manager
-//}
-
-Node::Node(int val): val(val), next(nullptr), prev(nullptr) {
-
-}
-
-LRU::LRU(size_t capacity, MyDB_BufferManager &bufferManager): capacity(capacity), bufferManager(bufferManager), size(0) {
-    head = new Node(0);
-    tail = new Node(0);
-    head->next = tail;
-    tail->prev = head;
-}
-
-Node *LRU::addToMap(int id, int val) {
-    size++;
-    Node *node = new Node(val);
-    map[id] = node;
-    addToHead(node);
-    return node;
-}
-
-void LRU::eraseNode(Node *node) {
-    remove(node);
-    map.erase(node->val);
-    //TODO: modify based on buffer manager
-}
-
-Node *LRU::findNode(int id) {
+Node *LRU::findNode(const pair<MyDB_TablePtr, size_t>& id) {
     if(map.find(id) != map.end()) {
         Node *curr = map.find(id)->second;
         moveToHead(curr);
@@ -108,6 +56,24 @@ Node *LRU::findNode(int id) {
     } else {
         return nullptr;
     }
+}
+
+Node *LRU::addToMap(pair<MyDB_TablePtr, size_t> id, MyDB_PagePtr page) {
+    //TODO: modify based on buffer manager
+    size++;
+    Node *node = new Node(page);
+    map[make_pair(id.first, id.second)] = node;
+    addToHead(node);
+    return node;
+}
+
+int LRU::getSize() const {
+    return this->size;
+}
+
+void LRU::eraseNode(Node *node) {
+    remove(node);
+    //TODO: modify based on buffer manager and delete the map entry
 }
 
 #endif //LRU_C

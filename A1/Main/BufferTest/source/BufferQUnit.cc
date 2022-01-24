@@ -43,20 +43,6 @@ int main () {
     {
         MyDB_BufferManager myMgr (64, 16, "tempDSFSD");
         LRU lru(12, myMgr);
-        Node* node1 = new Node(1);
-        Node* node2 = new Node(8);
-        Node* node3 = new Node(3);
-        Node* node4 = new Node(4);
-        Node* node5 = new Node(5);
-        Node* node6 = new Node(6);
-        lru.addToMap(-1, 1);
-        lru.addToMap(-2, 2);
-        lru.addToMap(-3, 3);
-        lru.addToMap(0, 0);
-        lru.getSize();
-        lru.addToHead(node2);
-        lru.addToHead(node6);
-        lru.eraseNode(node2);
     }
 
 //	// UNIT TEST 2: A BIG ONE!!

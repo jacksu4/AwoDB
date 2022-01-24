@@ -2,8 +2,8 @@
 #ifndef BUFFER_MGR_H
 #define BUFFER_MGR_H
 
-#include "MyDB_PageHandle.h"
-#include "MyDB_Table.h"
+#include "../headers/MyDB_PageHandle.h"
+#include "../../Catalog/headers/MyDB_Table.h"
 
 using namespace std;
 
