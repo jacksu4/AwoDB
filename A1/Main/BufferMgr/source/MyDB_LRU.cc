@@ -21,35 +21,6 @@ LRU::~LRU() {
     delete tail;
 }
 
-void* LRU::usePage(MyDB_PagePtr p) {
-    /*
-    
-    Node *node = findNode(p.getTable(), getOffset());
-
-    if(*node != null) {
-        this.moveToHead(node);
-    } else {
-        *node = new Node(p);
-        if(this.isFull()) {
-            if(this.size() == 0) {
-                return null;
-            }
-            Node *evictNode = this.popTail();
-            void *bytes = evictNode.page.getBytes();
-            node.setBytes(bytes);
-        } else {
-            node.setBytes();// Randomly allocate a place in buffer for the page
-        }
-        this.addToHead(node);
-    }
-
-    return node.getBytes();
-
-    */
-    return 0;
-}
-
-
 bool LRU::isFull() const {
     return this->size >= this->capacity;
 }
@@ -78,8 +49,26 @@ void LRU::moveToHead(Node *node) {
 Node *LRU::popTail() {
     Node *lastNode = tail->prev;
     this->remove(lastNode);
+
+    // delete the corresponding entry in map
+
+    /*
+    
+    map.erase(pair<lastNode->getPage()->getTable(), lastNode->getPage()->getOffset()>);
+
+    if(lastNode.getPage()->isDirty()) {
+        MyDB_TablePtr table = lastNode.getPage()->getTable();
+        if(table == nullptr) {
+            write(bufferManager.tempFile);
+            return lastNode;
+        }
+        write(lastNode.getPage()->getTable());
+    }
+
     return lastNode;
-    //TODO: add pin functionality
+
+    */
+    return lastNode;
 }
 
 Node *LRU::findNode(const pair<MyDB_TablePtr, size_t>& id) {
@@ -93,11 +82,9 @@ Node *LRU::findNode(const pair<MyDB_TablePtr, size_t>& id) {
 }
 
 Node *LRU::addToMap(pair<MyDB_TablePtr, size_t> id, MyDB_PagePtr page) {
-    //TODO: modify based on buffer manager
     size++;
     Node *node = new Node(page);
     map[make_pair(id.first, id.second)] = node;
-    addToHead(node);
     return node;
 }
 
@@ -107,6 +94,12 @@ int LRU::getSize() const {
 
 void LRU::eraseNode(Node *node) {
     remove(node);
+    /*
+
+    this->map.erase(pair<node->getPage()->getTable(), node->getPage()->getOffset()>);
+    this->bufferManager.buffer.pushBack(node.getPage()->getBytes());
+
+    */
     //TODO: modify based on buffer manager and delete the map entry
 }
 

@@ -11,35 +11,43 @@ using namespace std;
 MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr whichTable, long i) {
 	/****************************
 	
-	ph = null;
-	void* bytes = (read from the file);
+	if(lru.isFull() && lru.size() == 0) {
+		return null;
+	}
+
 	if(!lookUp.contains(<whichTable, i>)) {
 		p = new Page(whichTable, i, this);
-
-		// Initialize
-		p.dirty = false;
-		p.pinned = false;
-		p.refCount = 0;
-
 		lookUp.put(<whichTable, i>, p);
 	}
 
 	p = lookUp.get(<whichTable, i>);
-	// Check if buffer is full, evict
-	buffer.usePage(p);
 
-	// Check if LRU is full, evict and set pn to the head
-	// should be done in the function putHead(Node pn);
-	void* pos = LRU.usePage(p);
+	Node *node = findNode(p.getTable(), p.getOffset());
 
-	*pos = (read from the file);
-	p.bytes = pos;
-	
+    if(*node != null) {
+        if(!p.isPinned()) {
+            lru.moveToHead(node);
+        }
+    } else {
+        if(lru.isFull()) {
+            Node *evictNode = lru.popTail();
+            void *bytes = evictNode.page.getBytes();
+            p.setBytes(bytes);
+        } else {
+            p.setBytes(buffer[buffer.size() - 1]);// Randomly allocate a place in buffer for the page
+			buffer.popBack();
+        }
+		Node *node = lru.addToMap(<p.getTable(), p.getOffset()>, p);
+		lru.addToHead(node);
+
+		void* bytes = p.getBytes();
+		readFromFile(bytes);
+    }
+
 	// Manage p.refCount++ in constructor
 	ph = new PageHandleBase(p);
 
 	return ph;
-
 
 	****************************/
 	return nullptr;		
@@ -48,17 +56,23 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr whichTable, long i)
 MyDB_PageHandle MyDB_BufferManager :: getPage () {
 	/****************************
 	
-	p = new Page(whichTable, i, this);
+	if(lru.isFull() && lru.size() == 0) {
+		return null;
+	}
 
-	// Initialize
-	p.dirty = false;
-	p.pinned = false;
-	p.refCount = 0;
+	p = new Page(tempFile, anonymousCounter, this);
+	anonymousCounter++;
 
-	void* pos = LRU.usePage(p);
-
-	*pos = (read from the file);
-	p.bytes = pos;
+	if(lru.isFull()) {
+		Node *evictNode = lru.popTail();
+		void *bytes = evictNode.page.getBytes();
+		p.setBytes(bytes);
+	} else {
+		p.setBytes(buffer[buffer.size() - 1]);// Randomly allocate a place in buffer for the page
+		buffer.popBack();
+	}
+	Node *node = lru.addToMap(<p.getTable(), p.getOffset()>, p);
+	lru.addToHead(node);
 
 	ph = new PageHandleBase(p);
 
@@ -71,36 +85,32 @@ MyDB_PageHandle MyDB_BufferManager :: getPage () {
 MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (const MyDB_TablePtr&, long) {
 	/****************************
 	
-	ph = null;
-	void* bytes = (read from the file);
+	if(lru.isFull() && lru.size() == 0) {
+		return null;
+	}
+
 	if(!lookUp.contains(<whichTable, i>)) {
 		p = new Page(whichTable, i, this);
-
-		// Initialize
-		p.dirty = false;
-		p.pinned = true;
-		p.refCount = 0;
 
 		lookUp.put(<whichTable, i>, p);
 	}
 
 	p = lookUp.get(<whichTable, i>);
-	p.pinned = true;
-	// Check if buffer is full, evict
-	buffer.usePage(p);
 
-	// Check if LRU is full, evict and set pn to the head
-	// should be done in the function putHead(Node pn);
-	void* pos = LRU.usePage(p);
+	Node *node = findNode(p.getTable(), getOffset());
 
-	*pos = (read from the file);
-	p.bytes = pos;
-	
+	if(*node != null) {
+		if(!p.isPinned()) {
+			lru.remove(node);
+		}
+	} else {
+		lru.addToMap(<p.getTable(), p.getOffset()>, p);
+	}
+
 	// Manage p.refCount++ in constructor
 	ph = new PageHandleBase(p);
 
 	return ph;
-
 
 	****************************/
 	return nullptr;		
@@ -109,17 +119,22 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (const MyDB_TablePtr&, long)
 MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
 	/****************************
 	
-	p = new Page(whichTable, i, this);
+	if(lru.isFull() && lru.size() == 0) {
+		return null;
+	}
 
-	// Initialize
-	p.dirty = false;
-	p.pinned = true;
-	p.refCount = 0;
+	p = new Page(tempFile, anonymousCounter, this);
+	anonymousCounter++;
 
-	void* pos = LRU.usePage(p);
-
-	*pos = (read from the file);
-	p.bytes = pos;
+	if(lru.isFull()) {
+		Node *evictNode = lru.popTail();
+		void *bytes = evictNode.page.getBytes();
+		p.setBytes(bytes);
+	} else {
+		p.setBytes(buffer[buffer.size() - 1]);// Randomly allocate a place in buffer for the page
+		buffer.popBack();
+	}
+	lru.addToMap(<p.getTable(), p.getOffset()>, p);
 
 	ph = new PageHandleBase(p);
 
@@ -130,9 +145,43 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
 }
 
 void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
+
 	unpinMe->getPage()->setPin(false);
+
+	/*
+	
+	page = unpinMe.getPage();
+	Node *node = lru->map[<page.getTable(), page.getOffSet()>];
+	lru.addToHead(node);
+
+	*/
 	// put it back into LRU first position
 }
+
+void killPage(MyDB_PagePtr page) {
+	/*
+
+	pair<MyDB_TablePtr, size_t> lookUpKey = make_pair(page.getTable(), page.getOffset());
+
+	if(page.getTable() == nullptr) {
+		if(lru.map.contains(lookUpKey)) {
+			Node *node = lru.map.get(lookUpKey);
+			lru.eraseNode(node);
+		}
+		// xigou
+		return;
+	}
+	
+	lookupTable.erase(lookUpKey);
+	if(page.isDirty()) {
+		write(page);
+	}
+	// xigou
+
+	return;
+	*/
+}
+
 
 MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, const string& tempFile) {
     this->pageSize = pageSize;

@@ -53,7 +53,9 @@ public:
 	//get the buffer
 	vector<void*> getBuffer();
 
-	void usePage(const MyDB_TablePtr& table, size_t offset);
+	void killPage(MyDB_PagePtr page);
+
+	// void usePage(const MyDB_TablePtr& table, size_t offset);
 
 private:
 
