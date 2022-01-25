@@ -53,6 +53,16 @@ private:
 
 	// YOUR STUFF HERE
 
+	// Lookup Table
+
+	// LRU
+
+	// Buffer
+	// void* buffer;
+
+	// Buffer Set (Indexes in the set indicates the available buffer)
+	// set<int> bufferSet;
+
 };
 
 #endif

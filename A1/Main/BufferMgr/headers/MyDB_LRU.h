@@ -28,6 +28,18 @@ public:
 
     ~LRU();
 
+    /*
+    
+    // Return the index of the buffer to store data
+    
+    void remove(Page* p);
+
+    */
+
+   
+    void* usePage(MyDB_PagePtr p);
+
+
     bool isFull() const;
 
     void remove(Node *node);

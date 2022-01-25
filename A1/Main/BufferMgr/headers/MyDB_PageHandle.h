@@ -35,6 +35,13 @@ public:
 	~MyDB_PageHandleBase ();
 
 	// FEEL FREE TO ADD ADDITIONAL PUBLIC METHODS
+
+	/*
+	
+	void unpin();
+
+	*/
+
 	MyDB_PageHandleBase(MyDB_PagePtr page);
 
 	MyDB_PagePtr getPage();

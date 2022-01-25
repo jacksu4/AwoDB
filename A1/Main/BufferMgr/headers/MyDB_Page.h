@@ -38,6 +38,7 @@ public:
 
     size_t getOffset() const;
 
+    MyDB_TablePtr getTable() const;
 
 
 private:

@@ -21,6 +21,20 @@ LRU::~LRU() {
     delete tail;
 }
 
+void* LRU::usePage(MyDB_PagePtr p) {
+    /*
+    
+    if(this.isFull()) {
+        popTail();
+    }
+    p->node;
+
+
+    */
+    return 0;
+}
+
+
 bool LRU::isFull() const {
     return this->size >= this->capacity;
 }
