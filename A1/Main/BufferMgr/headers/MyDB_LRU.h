@@ -59,6 +59,9 @@ public:
     void eraseNode(Node *node);
 
 private:
+
+    friend class MyDB_BufferManager;
+
     //capacity of LRU
     size_t capacity;
 

@@ -4,6 +4,7 @@
 
 #include "MyDB_BufferManager.h"
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -67,7 +68,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage () {
 	return nullptr;		
 }
 
-MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (MyDB_TablePtr, long) {
+MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (const MyDB_TablePtr&, long) {
 	/****************************
 	
 	ph = null;
@@ -129,22 +130,34 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
 }
 
 void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
-	/****************************
-	
-	unpinMe.unpin();
-
-	****************************/
+	unpinMe->getPage()->setPin(false);
+	// put it back into LRU first position
 }
 
-MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, string tempFile) {
-	// this.buffer = malloc(pageSize * numPages);
-	// this.LRU = new LRU();
-	// this.lookUp = new HashMap<>();
+MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, const string& tempFile) {
+    this->pageSize = pageSize;
+    this->numPages = numPages;
+    this->tempFile = tempFile;
+    this->anonymousCounter = 0;
+    this->lru = new LRU(numPages, *this);
+    this->lookupTable = {};
+
+    for(size_t i = 0; i < numPages; i++) {
+        this->buffer.push_back((void*)malloc(pageSize));
+    }
+
 }
 
 MyDB_BufferManager :: ~MyDB_BufferManager () {
 }
-	
+
+vector<void *> MyDB_BufferManager::getBuffer() {
+    return this->buffer;
+}
+
+void MyDB_BufferManager::usePage(const MyDB_TablePtr& t, size_t offset) {
+}
+
 #endif
 
 

@@ -62,6 +62,10 @@ size_t MyDB_Page::getOffset() const {
     return this->offset;
 }
 
+MyDB_TablePtr MyDB_Page::getTable() const {
+    return this->table;
+}
+
 
 #endif //PAGE_H
 
