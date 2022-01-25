@@ -17,7 +17,8 @@ LRU::LRU(size_t capacity, MyDB_BufferManager &bufferManager): capacity(capacity)
 }
 
 LRU::~LRU() {
-
+    delete head;
+    delete tail;
 }
 
 bool LRU::isFull() const {
