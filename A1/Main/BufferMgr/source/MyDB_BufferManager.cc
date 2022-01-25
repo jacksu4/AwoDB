@@ -32,12 +32,13 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr whichTable, long i)
         if(lru.isFull()) {
             Node *evictNode = lru.popTail();
             void *bytes = evictNode.page.getBytes();
+			evictNode.page.setBytes(nullptr);
             p.setBytes(bytes);
         } else {
             p.setBytes(buffer[buffer.size() - 1]);// Randomly allocate a place in buffer for the page
 			buffer.popBack();
         }
-		Node *node = lru.addToMap(<p.getTable(), p.getOffset()>, p);
+		Node *node = lru.addToMap(pair<p.getTable(), p.getOffset()>, p);
 		lru.addToHead(node);
 
 		void* bytes = p.getBytes();
@@ -66,6 +67,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage () {
 	if(lru.isFull()) {
 		Node *evictNode = lru.popTail();
 		void *bytes = evictNode.page.getBytes();
+		evictNode.page.setBytes(nullptr);
 		p.setBytes(bytes);
 	} else {
 		p.setBytes(buffer[buffer.size() - 1]);// Randomly allocate a place in buffer for the page
@@ -129,6 +131,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
 	if(lru.isFull()) {
 		Node *evictNode = lru.popTail();
 		void *bytes = evictNode.page.getBytes();
+		evictNode.page.setBytes(nullptr);
 		p.setBytes(bytes);
 	} else {
 		p.setBytes(buffer[buffer.size() - 1]);// Randomly allocate a place in buffer for the page
