@@ -24,11 +24,26 @@ LRU::~LRU() {
 void* LRU::usePage(MyDB_PagePtr p) {
     /*
     
-    if(this.isFull()) {
-        popTail();
-    }
-    p->node;
+    Node *node = findNode(p.getTable(), getOffset());
 
+    if(*node != null) {
+        this.moveToHead(node);
+    } else {
+        *node = new Node(p);
+        if(this.isFull()) {
+            if(this.size() == 0) {
+                return null;
+            }
+            Node *evictNode = this.popTail();
+            void *bytes = evictNode.page.getBytes();
+            node.setBytes(bytes);
+        } else {
+            node.setBytes();// Randomly allocate a place in buffer for the page
+        }
+        this.addToHead(node);
+    }
+
+    return node.getBytes();
 
     */
     return 0;
@@ -42,9 +57,13 @@ bool LRU::isFull() const {
 void LRU::remove(Node *node) {
     node->prev->next = node->next;
     node->next->prev = node->prev;
+    this->size--;
 }
 
 void LRU::addToHead(Node *node) {
+    if(this->isFull()) {
+        return;
+    }
     node->prev = head;
     node->next = head->next;
     head->next->prev = node;
