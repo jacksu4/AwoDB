@@ -2,7 +2,8 @@
 #define LRU_C
 
 #include <fcntl.h>
-#include <iostream>
+#include <sys/uio.h>
+#include <unistd.h>
 #include <MyDB_LRU.h>
 #include "MyDB_BufferManager.h"
 
@@ -54,31 +55,30 @@ Node *LRU::popTail() {
 
     MyDB_BufferManager manager = this->bufferManager;
     // delete the corresponding entry in map
-    MyDB_Page curPage = lastNode->page;
-    MyDB_TablePtr table = curPage.getTable();
-    pair<MyDB_TablePtr, size_t> pageNode = make_pair(table, (curPage.getOffset());
+    MyDB_PagePtr curPage = lastNode->page;
+    MyDB_TablePtr table = curPage->getTable();
+    pair<MyDB_TablePtr, size_t> pageNode = make_pair(table, (curPage->getOffset()));
     this->map.erase(pageNode);
 
-    if(lastNode->page.isDirty()) {
+    if(lastNode->page->isDirty()) {
         if(!table) {
             if(manager.openFile.count(nullptr) == 0) {
-                int file = open(manager.tempFile.c_str (), O_TRUNC | O_CREAT | O_RDWR, 0666);
+                int file = open(manager.tempFile.c_str (), O_TRUNC | O_CREAT | O_RDWR | O_FSYNC, 0666);
                 manager.openFile[nullptr] = file;
             }
         }
 
         if(manager.openFile.count(table) == 0) {
-            int file = open(table->getStorageLoc().c_str (), O_TRUNC | O_CREAT | O_RDWR, 0666);
+            int file = open(table->getStorageLoc().c_str (), O_TRUNC | O_CREAT | O_RDWR | O_FSYNC, 0666);
             manager.openFile[table] = file;
         }
 
-        lseek(manager.openFile[table], curPage.getOffset() * manager.pageSize, SEEK_SET);
-        write(manager.openFile[table], curPage.getBytes(), manager.pageSize);
+        lseek(manager.openFile[table], curPage->getOffset() * manager.pageSize, SEEK_SET);
+        write(manager.openFile[table], curPage->getBytes(), manager.pageSize);
     }
     /*
-    
-    map.erase(pair<lastNode->getPage()->getTable(), lastNode->getPage()->getOffset()>);
 
+    map.erase(pair<lastNode->getPage()->getTable(), lastNode->getPage()->getOffset()>);
     if(lastNode.getPage()->isDirty()) {
         MyDB_TablePtr table = lastNode.getPage()->getTable();
         if(table == nullptr) {
@@ -87,9 +87,7 @@ Node *LRU::popTail() {
         }
         write(lastNode.getPage()->getTable());
     }
-
     return lastNode;
-
     */
     return lastNode;
 }
@@ -117,16 +115,13 @@ int LRU::getSize() const {
 
 void LRU::eraseNode(Node *node) {
     remove(node);
-    MyDB_Page curPage = node->page;
-    pair<MyDB_TablePtr, size_t> curPair = make_pair(curPage.getTable(), curPage.getOffset());
+    MyDB_PagePtr curPage = node->page;
+    pair<MyDB_TablePtr, size_t> curPair = make_pair(curPage->getTable(), curPage->getOffset());
     this->map.erase(curPair);
     /*
-
     this->map.erase(pair<node->getPage()->getTable(), node->getPage()->getOffset()>);// done
     this->bufferManager.buffer.pushBack(node.getPage()->getBytes());
-
     */
-    //TODO: modify based on buffer manager and delete the map entry
 }
 
 #endif //LRU_C
