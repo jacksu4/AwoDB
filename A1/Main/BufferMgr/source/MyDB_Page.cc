@@ -25,7 +25,7 @@ void MyDB_Page::addRefCount() {
 void MyDB_Page::reduceRefCount() {
     this->refCount--;
     if (this->refCount == 0) {
-        //TODO: bufferManager kill the page
+        bufferManager.killPage(*this);
     }
 }
 

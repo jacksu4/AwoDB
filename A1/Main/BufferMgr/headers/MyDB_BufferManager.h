@@ -17,7 +17,7 @@ public:
 	// gets the i^th page in the table whichTable... note that if the page
 	// is currently being used (that is, the page is current buffered) a handle 
 	// to that already-buffered page should be returned
-	MyDB_PageHandle getPage (MyDB_TablePtr whichTable, long i);
+	MyDB_PageHandle getPage (const MyDB_TablePtr& whichTable, long i);
 
 	// gets a temporary page that will no longer exist (1) after the buffer manager
 	// has been destroyed, or (2) there are no more references to it anywhere in the
@@ -53,9 +53,7 @@ public:
 	//get the buffer
 	vector<void*> getBuffer();
 
-	void killPage(MyDB_PagePtr page);
-
-	// void usePage(const MyDB_TablePtr& table, size_t offset);
+	void killPage(MyDB_Page& page);
 
 private:
 
