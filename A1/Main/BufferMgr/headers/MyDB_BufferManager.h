@@ -66,6 +66,9 @@ private:
     //offset for anonymous page
     size_t anonymousCounter;
 
+	// Open File
+	map<pair<MyDB_TablePtr, size_t>, int> openFile;
+
 	// Lookup Table
 	map<pair<MyDB_TablePtr, size_t>, MyDB_PagePtr> lookupTable;
 
