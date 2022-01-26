@@ -35,7 +35,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (const MyDB_TablePtr& whichTable, 
     } else {
         if (lru->isFull()) {
             Node* evictedNode = lru->popTail();
-            void* bytes = evictedNode->page->getBytes();
+            void* bytes = evictedNode->page->bytes;
             evictedNode->page->setBytes(nullptr);
             page->setBytes(bytes);
         } else {
@@ -46,13 +46,12 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (const MyDB_TablePtr& whichTable, 
         lru->addToHead(node);
 
         //how to deal with it
-        void* bytes = page->getBytes();
 
         int fd;
 
         fd = open(page->getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
         lseek(fd, page->getOffset() * this->pageSize, SEEK_SET);
-        read(fd, page->getBytes(), pageSize);
+        read(fd, page->bytes, pageSize);
         close(fd);
 
     }
@@ -114,7 +113,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage () {
 
     if (lru->isFull()) {
         Node* evictedNode = lru->popTail();
-        void* bytes = evictedNode->page->getBytes();
+        void* bytes = evictedNode->page->bytes;
         evictedNode->page->setBytes(nullptr);
         new_page->setBytes(bytes);
     } else {
@@ -217,7 +216,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
 
     if (lru->isFull()) {
         Node* evictedNode = lru->popTail();
-        void* bytes = evictedNode->page->getBytes();
+        void* bytes = evictedNode->page->bytes;
         evictedNode->page->setBytes(nullptr);
         new_page->setBytes(bytes);
     } else {
@@ -295,12 +294,12 @@ void MyDB_BufferManager :: killPage(MyDB_Page& page) {
             fd = open(page.getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
         }
         lseek(fd, page.getOffset() * this->pageSize, SEEK_SET);
-        write(fd, page.getBytes(), pageSize);
+        write(fd, page.bytes, pageSize);
         page.setDirty(false);
         close(fd);
     }
 
-    if (page.getBytes() != nullptr) {
+    if (page.bytes != nullptr) {
         buffer.push_back(page.bytes);
         page.setBytes(nullptr);
     }
@@ -345,7 +344,7 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, cons
 MyDB_BufferManager :: ~MyDB_BufferManager () {
     for(const auto& entry: lookupTable) {
         MyDB_PagePtr page = entry.second;
-        if (page->getBytes() != nullptr) {
+        if (page->bytes != nullptr) {
             if (page->isDirty()) {
                 int fd;
                 if (page->getTable() == nullptr) {
@@ -354,7 +353,7 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
                     fd = open(page->getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
                 }
                 lseek(fd, page->getOffset() * this->pageSize, SEEK_SET);
-                write(fd, page->getBytes(), pageSize);
+                write(fd, page->bytes, pageSize);
                 page->setDirty(false);
                 close(fd);
             }
