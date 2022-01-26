@@ -118,7 +118,7 @@ void LRU::eraseNode(Node *node) {
     this->map.erase(pair<node->getPage()->getTable(), node->getPage()->getOffset()>);// done
     this->bufferManager.buffer.pushBack(node.getPage()->getBytes());
     */
-    this->bufferManager.buffer.push_back(curPage->getBytes());
+    this->bufferManager.buffer.push_back(curPage->bytes);
 }
 
 #endif //LRU_C

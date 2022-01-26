@@ -301,7 +301,7 @@ void MyDB_BufferManager :: killPage(MyDB_Page& page) {
     }
 
     if (page.getBytes() != nullptr) {
-        buffer.push_back(page.getBytes());
+        buffer.push_back(page.bytes);
         page.setBytes(nullptr);
     }
 	/*
@@ -358,8 +358,7 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
                 page->setDirty(false);
                 close(fd);
             }
-            free(page->getBytes());
-            page->setBytes(nullptr);
+            free(page->bytes);
         }
     }
 
@@ -384,6 +383,10 @@ void MyDB_BufferManager::access(MyDB_Page &page) {
           Node* node = lru->addToMap(key, lookupTable[make_pair(page.getTable(), page.getOffset())]);
           lru->moveToHead(node);
         }
+    }
+
+    if(buffer.size() == 0) {
+
     }
 
     page.setBytes(buffer[buffer.size() - 1]);
