@@ -109,11 +109,6 @@ void MyDB_BufferManager :: killPage(MyDB_Page& page) {
         return;
     }
 
-    //remove from LRU (may or may not needed)
-    if(lru->findNode(lookUpKey) != nullptr) {
-        lru->eraseNode(lru->findNode(lookUpKey));
-    }
-
     lookupTable.erase(lookUpKey);
 
     int fd;
@@ -128,6 +123,13 @@ void MyDB_BufferManager :: killPage(MyDB_Page& page) {
         page.setDirty(false);
         close(fd);
     }
+
+    //remove from LRU (may or may not needed) need to put after file operation because it will set
+    //the page->bytes to nullptr
+    if(lru->findNode(lookUpKey) != nullptr) {
+        lru->eraseNode(lru->findNode(lookUpKey));
+    }
+
 }
 
 
