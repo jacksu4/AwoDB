@@ -31,6 +31,7 @@ void MyDB_Page::reduceRefCount() {
 
 void *MyDB_Page::getBytes() {
     //TODO: bufferManager called to deal with getBytes
+    bufferManager.access(*this);
     return this->bytes;
 }
 

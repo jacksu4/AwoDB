@@ -3,7 +3,7 @@
 
 #include <map>
 #include <list>
-#include "MyDB_BufferManager.h"
+#include "MyDB_Page.h"
 
 using namespace std;
 
@@ -36,10 +36,6 @@ public:
 
     */
 
-   
-    void* usePage(MyDB_PagePtr p);
-
-
     bool isFull() const;
 
     void remove(Node *node);
@@ -52,7 +48,7 @@ public:
 
     Node* findNode(const pair<MyDB_TablePtr, size_t>& id);
 
-    Node* addToMap(pair<MyDB_TablePtr, size_t> id, MyDB_PagePtr page);
+    Node* addToMap(const pair<MyDB_TablePtr, size_t>& id, MyDB_PagePtr page);
 
     int getSize() const;
 
@@ -77,7 +73,6 @@ private:
     Node *head;
 
     Node *tail;
-
 };
 
 #endif //LRU_H

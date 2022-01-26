@@ -19,7 +19,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage (const MyDB_TablePtr& whichTable, 
         exit(1);
     }
 
-    if (lookupTable.count(make_pair(whichTable, i))) {
+    if (!lookupTable.count(make_pair(whichTable, i))) {
         MyDB_PagePtr new_page = make_shared<MyDB_Page>(whichTable, i, *this);
         lookupTable[make_pair(whichTable, i)] = new_page;
     }
@@ -109,6 +109,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPage () {
     }
 
     MyDB_PagePtr new_page = make_shared<MyDB_Page>(nullptr, anonymousCounter, *this);
+    lookupTable[make_pair(nullptr, anonymousCounter)] = new_page;
     anonymousCounter++;
 
     if (lru->isFull()) {
@@ -156,7 +157,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (const MyDB_TablePtr& whichT
         exit(1);
     }
 
-    if (lookupTable.count(make_pair(whichTable, i))) {
+    if (!lookupTable.count(make_pair(whichTable, i))) {
         MyDB_PagePtr new_page = make_shared<MyDB_Page>(whichTable, i, *this);
         lookupTable[make_pair(whichTable, i)] = new_page;
     }
@@ -168,7 +169,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (const MyDB_TablePtr& whichT
     if (node != nullptr && !page->isPinned()) {
         lru->remove(node);
     } else {
-        lru->addToMap(make_pair(page->getTable(), page->getOffset()));
+        lru->addToMap(make_pair(page->getTable(), page->getOffset()), page);
     }
     return make_shared<MyDB_PageHandleBase>(page);
 	/****************************
@@ -211,6 +212,7 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
     }
 
     MyDB_PagePtr new_page = make_shared<MyDB_Page>(nullptr, anonymousCounter, *this);
+    lookupTable[make_pair(nullptr, anonymousCounter)] = new_page;
     anonymousCounter++;
 
     if (lru->isFull()) {
@@ -335,7 +337,7 @@ MyDB_BufferManager :: MyDB_BufferManager (size_t pageSize, size_t numPages, cons
     this->lookupTable = {};
 
     for(size_t i = 0; i < numPages; i++) {
-        this->buffer.push_back((void*)malloc(pageSize));
+        this->buffer.push_back(malloc(pageSize));
     }
 
 }
@@ -370,6 +372,32 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
 
 vector<void *> MyDB_BufferManager::getBuffer() {
     return this->buffer;
+}
+
+void MyDB_BufferManager::access(MyDB_Page &page) {
+    pair<MyDB_TablePtr, size_t> key = make_pair(page.getTable(), page.getOffset());
+    if (!lru->findNode(key)) {
+        if (lru->isFull() && lru->size == 0) {
+            exit(1);
+        }
+        if(!page.isPinned()) {
+          Node* node = lru->addToMap(key, lookupTable[make_pair(page.getTable(), page.getOffset())]);
+          lru->moveToHead(node);
+        }
+    }
+
+    page.setBytes(buffer[buffer.size() - 1]);
+    buffer.pop_back();
+
+    int fd;
+    if (page.getTable() == nullptr) {
+        fd = open(tempFile.c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
+    } else {
+        fd = open(page.getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
+    }
+    lseek(fd, page.getOffset() * pageSize, SEEK_SET);
+    read(fd, page.bytes, pageSize);
+    close(fd);
 }
 
 #endif

@@ -31,7 +31,6 @@ bool LRU::isFull() const {
 void LRU::remove(Node *node) {
     node->prev->next = node->next;
     node->next->prev = node->prev;
-    this->size--;
 }
 
 void LRU::addToHead(Node *node) {
@@ -61,20 +60,16 @@ Node *LRU::popTail() {
     this->map.erase(pageNode);
 
     if(lastNode->page->isDirty()) {
+        int file;
         if(!table) {
-            if(manager.openFile.count(nullptr) == 0) {
-                int file = open(manager.tempFile.c_str (), O_TRUNC | O_CREAT | O_RDWR | O_FSYNC, 0666);
-                manager.openFile[nullptr] = file;
-            }
+            file = open(manager.tempFile.c_str (), O_TRUNC | O_CREAT | O_RDWR | O_FSYNC, 0666);
+        } else {
+            file = open(table->getStorageLoc().c_str (), O_TRUNC | O_CREAT | O_RDWR | O_FSYNC, 0666);
         }
 
-        if(manager.openFile.count(table) == 0) {
-            int file = open(table->getStorageLoc().c_str (), O_TRUNC | O_CREAT | O_RDWR | O_FSYNC, 0666);
-            manager.openFile[table] = file;
-        }
-
-        lseek(manager.openFile[table], curPage->getOffset() * manager.pageSize, SEEK_SET);
-        write(manager.openFile[table], curPage->getBytes(), manager.pageSize);
+        lseek(file, curPage->getOffset() * manager.pageSize, SEEK_SET);
+        write(file, curPage->getBytes(), manager.pageSize);
+        close(file);
     }
     /*
 
@@ -102,10 +97,11 @@ Node *LRU::findNode(const pair<MyDB_TablePtr, size_t>& id) {
     }
 }
 
-Node *LRU::addToMap(pair<MyDB_TablePtr, size_t> id, MyDB_PagePtr page) {
+Node *LRU::addToMap(const pair<MyDB_TablePtr, size_t>& id, MyDB_PagePtr page) {
     size++;
     Node *node = new Node(page);
     map[make_pair(id.first, id.second)] = node;
+    addToHead(node);
     return node;
 }
 

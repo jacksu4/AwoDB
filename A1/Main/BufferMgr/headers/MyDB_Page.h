@@ -40,6 +40,9 @@ public:
 
     MyDB_TablePtr getTable() const;
 
+    //pointer to raw bytes
+    void *bytes;
+
 
 private:
 
@@ -60,9 +63,6 @@ private:
 
     //number of reference to the page
     size_t refCount;
-
-    //pointer to raw bytes
-    void *bytes;
 };
 
 #endif //PAGE_H

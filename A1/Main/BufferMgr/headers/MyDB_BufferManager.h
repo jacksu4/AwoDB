@@ -4,7 +4,8 @@
 
 #include "../headers/MyDB_PageHandle.h"
 #include "../../Catalog/headers/MyDB_Table.h"
-#include "../headers/MyDB_LRU.h"
+#include "MyDB_LRU.h"
+#include <vector>
 
 using namespace std;
 
@@ -55,6 +56,8 @@ public:
 
 	void killPage(MyDB_Page& page);
 
+	void access(MyDB_Page& page);
+
 private:
 
     friend class LRU;
@@ -67,7 +70,7 @@ private:
 	// Open File
 	map<MyDB_TablePtr, int> openFile;
 
-	// Lookup Table
+	// Lookup Table (contains both anon & unanon pages)
 	map<pair<MyDB_TablePtr, size_t>, MyDB_PagePtr> lookupTable;
 
 	// LRU
@@ -80,7 +83,7 @@ private:
 	size_t pageSize;
 
 	//Number of pages
-	size_t numPages
+	size_t numPages;
 
 	// Buffer Set (Indexes in the set indicates the available buffer)
 	// set<int> bufferSet;
