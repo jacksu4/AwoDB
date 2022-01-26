@@ -67,7 +67,7 @@ private:
     size_t anonymousCounter;
 
 	// Open File
-	map<pair<MyDB_TablePtr, size_t>, int> openFile;
+	map<MyDB_TablePtr, int> openFile;
 
 	// Lookup Table
 	map<pair<MyDB_TablePtr, size_t>, MyDB_PagePtr> lookupTable;
