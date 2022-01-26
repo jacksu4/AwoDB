@@ -14,244 +14,70 @@
 using namespace std;
 
 MyDB_PageHandle MyDB_BufferManager :: getPage (const MyDB_TablePtr& whichTable, long i) {
-    if (lru->isFull() && lru->size == 0) {
-        //full of pinned page, then undefined behavior
-        exit(1);
-    }
 
-    if (!lookupTable.count(make_pair(whichTable, i))) {
+    pair<MyDB_TablePtr, size_t> idx = make_pair(whichTable, i);
+
+    if (!lookupTable.count(idx)) {
         MyDB_PagePtr new_page = make_shared<MyDB_Page>(whichTable, i, *this);
-        lookupTable[make_pair(whichTable, i)] = new_page;
+        lookupTable[idx] = new_page;
     }
 
-    MyDB_PagePtr page = lookupTable[make_pair(whichTable, i)];
-
-    Node* node = lru->findNode(make_pair(page->getTable(), page->getOffset()));
-
-    // if (node != nullptr) {
-    //     if(!page->isPinned()) {
-    //         lru->moveToHead(node);
-    //     }
-    // } else {
-    //     if (lru->isFull()) {
-    //         Node* evictedNode = lru->popTail();
-    //         void* bytes = evictedNode->page->bytes;
-    //         evictedNode->page->setBytes(nullptr);
-    //         page->setBytes(bytes);
-    //     } else {
-    //         page->setBytes(buffer[buffer.size() - 1]);
-    //         buffer.pop_back();
-    //         buffer.push
-    //     }
-    //     node = lru->addToMap(make_pair(page->getTable(), page->getOffset()), page);
-    //     lru->addToHead(node);
-
-    //     //how to deal with it
-
-    //     int fd;
-
-    //     fd = open(page->getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
-    //     lseek(fd, page->getOffset() * this->pageSize, SEEK_SET);
-    //     read(fd, page->bytes, pageSize);
-    //     close(fd);
-
-    // }
+    MyDB_PagePtr page = lookupTable[idx];
     return make_shared<MyDB_PageHandleBase>(page);
-	/****************************
-	
-	if(lru.isFull() && lru.size() == 0) {
-		return null;
-	}
-
-	if(!lookUp.contains(<whichTable, i>)) {
-		p = new Page(whichTable, i, this);
-		lookUp.put(<whichTable, i>, p);
-	}
-
-	p = lookUp.get(<whichTable, i>);
-
-	Node *node = findNode(p.getTable(), p.getOffset());
-
-    if(*node != null) {
-        if(!p.isPinned()) {
-            lru.moveToHead(node);
-        }
-    } else {
-        if(lru.isFull()) {
-            Node *evictNode = lru.popTail();
-            void *bytes = evictNode.page.getBytes();
-			evictNode.page.setBytes(nullptr);
-            p.setBytes(bytes);
-        } else {
-            p.setBytes(buffer[buffer.size() - 1]);// Randomly allocate a place in buffer for the page
-			buffer.popBack();
-        }
-		Node *node = lru.addToMap(pair<p.getTable(), p.getOffset()>, p);
-		lru.addToHead(node);
-
-		void* bytes = p.getBytes();
-		readFromFile(bytes);
-    }
-
-	// Manage p.refCount++ in constructor
-	ph = new PageHandleBase(p);
-
-	return ph;
-
-	****************************/
-	return nullptr;		
 }
 
 MyDB_PageHandle MyDB_BufferManager :: getPage () {
-    if (lru->isFull() && lru->size == 0) {
-        //full of pinned page, then undefined behavior
-        exit(1);
-    }
+
+    //TODO: may need to extend the size of temp file
 
     MyDB_PagePtr new_page = make_shared<MyDB_Page>(nullptr, anonymousCounter, *this);
     lookupTable[make_pair(nullptr, anonymousCounter)] = new_page;
     anonymousCounter++;
 
-    // if (lru->isFull()) {
-    //     Node* evictedNode = lru->popTail();
-    //     void* bytes = evictedNode->page->bytes;
-    //     evictedNode->page->setBytes(nullptr);
-    //     new_page->setBytes(bytes);
-    // } else {
-    //     new_page->setBytes(buffer[buffer.size() - 1]);
-    //     buffer.pop_back();
-    // }
     return make_shared<MyDB_PageHandleBase>(new_page);
-	/****************************
-	
-	if(lru.isFull() && lru.size() == 0) {
-		return null;
-	}
-
-	p = new Page(tempFile, anonymousCounter, this);
-	anonymousCounter++;
-
-	if(lru.isFull()) {
-		Node *evictNode = lru.popTail();
-		void *bytes = evictNode.page.getBytes();
-		evictNode.page.setBytes(nullptr);
-		p.setBytes(bytes);
-	} else {
-		p.setBytes(buffer[buffer.size() - 1]);// Randomly allocate a place in buffer for the page
-		buffer.popBack();
-	}
-	Node *node = lru.addToMap(<p.getTable(), p.getOffset()>, p);
-	lru.addToHead(node);
-
-	ph = new PageHandleBase(p);
-
-	return ph;
-
-	****************************/
-	return nullptr;		
 }
 
 MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (const MyDB_TablePtr& whichTable, long i) {
-    if (lru->isFull() && lru->size == 0) {
-        //full of pinned page, then undefined behavior
-        exit(1);
-    }
-
-    if (!lookupTable.count(make_pair(whichTable, i))) {
+    pair <MyDB_TablePtr, long> idx = make_pair (whichTable, i);
+    if (!lookupTable.count(idx)) {
         MyDB_PagePtr new_page = make_shared<MyDB_Page>(whichTable, i, *this);
-        lookupTable[make_pair(whichTable, i)] = new_page;
+        lookupTable[idx] = new_page;
+    }
+    MyDB_PagePtr page = lookupTable[make_pair(whichTable, i)];
+    page->setPin(true);
+
+    if(page->bytes == nullptr) {
+        if(lru->isFull()) {
+            lru->popTail();
+        }
+        lru->addToMap(idx, page);
+        page->bytes = buffer[buffer.size() - 1];
+        buffer.pop_back();
     }
 
-    MyDB_PagePtr page = lookupTable[make_pair(whichTable, i)];
-
-    // Node* node = lru->findNode(make_pair(page->getTable(), page->getOffset()));
-
-    // if (node != nullptr && !page->isPinned()) {
-    //     lru->remove(node);
-    // } else {
-    //     lru->addToMap(make_pair(page->getTable(), page->getOffset()), page);
-    // }
+    int fd;
+    if (page->getTable() == nullptr) {
+        fd = open(tempFile.c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
+    } else {
+        fd = open(page->getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
+    }
+    lseek(fd, page->getOffset() * pageSize, SEEK_SET);
+    read(fd, page->bytes, pageSize);
+    close(fd);
     return make_shared<MyDB_PageHandleBase>(page);
-	/****************************
-	
-	if(lru.isFull() && lru.size() == 0) {
-		return null;
-	}
-
-	if(!lookUp.contains(<whichTable, i>)) {
-		p = new Page(whichTable, i, this);
-
-		lookUp.put(<whichTable, i>, p);
-	}
-
-	p = lookUp.get(<whichTable, i>);
-
-	Node *node = findNode(p.getTable(), getOffset());
-
-	if(*node != null) {
-		if(!p.isPinned()) {
-			lru.remove(node);
-		}
-	} else {
-		lru.addToMap(<p.getTable(), p.getOffset()>, p);
-	}
-
-	// Manage p.refCount++ in constructor
-	ph = new PageHandleBase(p);
-
-	return ph;
-
-	****************************/
-	return nullptr;		
 }
 
 MyDB_PageHandle MyDB_BufferManager :: getPinnedPage () {
-    if (lru->isFull() && lru->size == 0) {
-        //full of pinned page, then undefined behavior
-        exit(1);
+
+    if(lru->isFull()) {
+        lru->popTail();
     }
 
-    MyDB_PagePtr new_page = make_shared<MyDB_Page>(nullptr, anonymousCounter, *this);
-    lookupTable[make_pair(nullptr, anonymousCounter)] = new_page;
-    anonymousCounter++;
+    auto ph = getPage();
 
-    // if (lru->isFull()) {
-    //     Node* evictedNode = lru->popTail();
-    //     void* bytes = evictedNode->page->bytes;
-    //     evictedNode->page->setBytes(nullptr);
-    //     new_page->setBytes(bytes);
-    // } else {
-    //     new_page->setBytes(buffer[buffer.size() - 1]);
-    //     buffer.pop_back();
-    // }
-    lru->addToMap(make_pair(new_page->getTable(), new_page->getOffset()), new_page);
-    return make_shared<MyDB_PageHandleBase>(new_page);
-	/****************************
-	
-	if(lru.isFull() && lru.size() == 0) {
-		return null;
-	}
-
-	p = new Page(tempFile, anonymousCounter, this);
-	anonymousCounter++;
-
-	if(lru.isFull()) {
-		Node *evictNode = lru.popTail();
-		void *bytes = evictNode.page.getBytes();
-		evictNode.page.setBytes(nullptr);
-		p.setBytes(bytes);
-	} else {
-		p.setBytes(buffer[buffer.size() - 1]);// Randomly allocate a place in buffer for the page
-		buffer.popBack();
-	}
-	lru.addToMap(<p.getTable(), p.getOffset()>, p);
-
-	ph = new PageHandleBase(p);
-
-	return ph;
-
-	****************************/
-	return nullptr;		
+    ph->getPage()->bytes = buffer[buffer.size() - 1];
+    buffer.pop_back();
+    return ph;
 }
 
 void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
@@ -262,29 +88,32 @@ void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
 
 	Node* node = lru->map[make_pair(page->getTable(), page->getOffset())];
 
+	lru->remove(node);
+
 	lru->addToHead(node);
-
-	/*
-	
-	page = unpinMe.getPage();
-	Node *node = lru->map[<page.getTable(), page.getOffSet()>];
-	lru.addToHead(node);
-
-	*/
-	// put it back into LRU first position
 }
 
 void MyDB_BufferManager :: killPage(MyDB_Page& page) {
+
     pair<MyDB_TablePtr, size_t> lookUpKey = make_pair(page.getTable(), page.getOffset());
 
     if(page.getTable() == nullptr) {
-        if(lru->map.count(lookUpKey)) {
-            Node* node = lru->map[lookUpKey];
-            lru->eraseNode(node);
-        }
-        //xigou
+        anonymousCounter--;
+    }
+
+    //if the page is pinned, just unpin it
+    if(lookupTable.count(lookUpKey) && page.isPinned()) {
+        MyDB_PagePtr ptr = lookupTable[lookUpKey];
+        MyDB_PageHandle tmp = make_shared<MyDB_PageHandleBase>(ptr);
+        unpin(tmp);
         return;
     }
+
+    //remove from LRU (may or may not needed)
+    if(lru->findNode(lookUpKey) != nullptr) {
+        lru->eraseNode(lru->findNode(lookUpKey));
+    }
+
     lookupTable.erase(lookUpKey);
 
     int fd;
@@ -299,32 +128,6 @@ void MyDB_BufferManager :: killPage(MyDB_Page& page) {
         page.setDirty(false);
         close(fd);
     }
-
-    if (page.bytes != nullptr) {
-        buffer.push_back(page.bytes);
-        page.setBytes(nullptr);
-    }
-	/*
-
-	pair<MyDB_TablePtr, size_t> lookUpKey = make_pair(page.getTable(), page.getOffset());
-
-	if(page.getTable() == nullptr) {
-		if(lru.map.contains(lookUpKey)) {
-			Node *node = lru.map.get(lookUpKey);
-			lru.eraseNode(node);
-		}
-		// xigou
-		return;
-	}
-	
-	lookupTable.erase(lookUpKey);
-	if(page.isDirty()) {
-		write(page);
-	}
-	// xigou
-
-	return;
-	*/
 }
 
 
@@ -375,29 +178,23 @@ vector<void *> MyDB_BufferManager::getBuffer() {
 
 void MyDB_BufferManager::access(MyDB_Page &page) {
     pair<MyDB_TablePtr, size_t> key = make_pair(page.getTable(), page.getOffset());
-    if (!lru->findNode(key)) {
-        if (lru->isFull() && lru->size == 0) {
-            exit(1);
-        }
-        if(!page.isPinned()) {
-          Node* node = lru->addToMap(key, lookupTable[make_pair(page.getTable(), page.getOffset())]);
-          lru->moveToHead(node);
-        }
+    if (lru->findNode(key)) {
+        lru->moveToHead(lru->findNode(key));
+
+    } else if (!lru->findNode(key) && !page.isPinned() && !lru->isFull()) {
+        Node* node = lru->addToMap(key, lookupTable[key]);
+        lru->moveToHead(node);
+    } else if (!lru->findNode(key) && page.isPinned()) {
+    } else {
+        lru->popTail();
+        Node* node = lru->addToMap(key, lookupTable[key]);
+        lru->moveToHead(node);
     }
 
-    // If LRU is full(which means buffer is full),
-    // evict the LRU page in LRU, add the address
-    // to the available buffer address vecter, and
-    // let the bytes of the page points to a nullptr.
-    if(lru->isFull()) {
-        Node *popNode = lru->popTail();
-        buffer.push_back(popNode->page->bytes);
-        popNode->page.setBytes(nullptr);
+    if (page.bytes == nullptr) {
+        page.setBytes(buffer[buffer.size() - 1]);
+        buffer.pop_back();
     }
-
-    // Let the new page points to the 
-    page.setBytes(buffer[buffer.size() - 1]);
-    buffer.pop_back();
 
     int fd;
     if (page.getTable() == nullptr) {

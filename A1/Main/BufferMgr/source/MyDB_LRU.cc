@@ -50,14 +50,25 @@ void LRU::moveToHead(Node *node) {
 
 Node *LRU::popTail() {
     Node *lastNode = tail->prev;
+
+    for(int i = 0; i < this->capacity; i++) {
+        if(!lastNode->page->isPinned()) {
+            break;
+        }
+        lastNode = lastNode->prev;
+    }
+
+    if(lastNode == head) {
+        //undefined behavior
+        exit(1);
+    }
+
     this->remove(lastNode);
 
     MyDB_BufferManager manager = this->bufferManager;
     // delete the corresponding entry in map
     MyDB_PagePtr curPage = lastNode->page;
     MyDB_TablePtr table = curPage->getTable();
-    pair<MyDB_TablePtr, size_t> pageNode = make_pair(table, (curPage->getOffset()));
-    this->map.erase(pageNode);
 
     if(lastNode->page->isDirty()) {
         int file;
@@ -70,27 +81,17 @@ Node *LRU::popTail() {
         lseek(file, curPage->getOffset() * manager.pageSize, SEEK_SET);
         write(file, curPage->getBytes(), manager.pageSize);
         close(file);
+        lastNode->page->setDirty(false);
     }
-    /*
 
-    map.erase(pair<lastNode->getPage()->getTable(), lastNode->getPage()->getOffset()>);
-    if(lastNode.getPage()->isDirty()) {
-        MyDB_TablePtr table = lastNode.getPage()->getTable();
-        if(table == nullptr) {
-            write(bufferManager.tempFile);
-            return lastNode;
-        }
-        write(lastNode.getPage()->getTable());
-    }
-    return lastNode;
-    */
+    eraseNode(lastNode);
+
     return lastNode;
 }
 
 Node *LRU::findNode(const pair<MyDB_TablePtr, size_t>& id) {
     if(map.find(id) != map.end()) {
         Node *curr = map.find(id)->second;
-        moveToHead(curr);
         return curr;
     } else {
         return nullptr;
@@ -114,11 +115,9 @@ void LRU::eraseNode(Node *node) {
     MyDB_PagePtr curPage = node->page;
     pair<MyDB_TablePtr, size_t> curPair = make_pair(curPage->getTable(), curPage->getOffset());
     this->map.erase(curPair);
-    /*
-    this->map.erase(pair<node->getPage()->getTable(), node->getPage()->getOffset()>);// done
-    this->bufferManager.buffer.pushBack(node.getPage()->getBytes());
-    */
     this->bufferManager.buffer.push_back(curPage->bytes);
+    curPage->bytes = nullptr;
+    size--;
 }
 
 #endif //LRU_C
