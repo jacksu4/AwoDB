@@ -7,6 +7,9 @@
 #include <MyDB_LRU.h>
 #include "MyDB_BufferManager.h"
 
+
+#include <iostream>
+
 using namespace std;
 
 Node::Node(MyDB_PagePtr page): page(page), next(nullptr), prev(nullptr) {
@@ -31,6 +34,9 @@ bool LRU::isFull() const {
 void LRU::remove(Node *node) {
     node->prev->next = node->next;
     node->next->prev = node->prev;
+    node->prev = nullptr;
+    node->next = nullptr;
+    this->size--;
 }
 
 void LRU::addToHead(Node *node) {
@@ -41,6 +47,8 @@ void LRU::addToHead(Node *node) {
     node->next = head->next;
     head->next->prev = node;
     head->next = node;
+
+    this->size++;
 }
 
 void LRU::moveToHead(Node *node) {
@@ -99,10 +107,14 @@ Node *LRU::findNode(const pair<MyDB_TablePtr, size_t>& id) {
 }
 
 Node *LRU::addToMap(const pair<MyDB_TablePtr, size_t>& id, MyDB_PagePtr page) {
-    size++;
     Node *node = new Node(page);
     map[make_pair(id.first, id.second)] = node;
-    addToHead(node);
+    
+    if(!(node->page->isPinned())) {
+        addToHead(node);
+    } else {
+        this->capacity--;
+    }
     return node;
 }
 
@@ -117,7 +129,6 @@ void LRU::eraseNode(Node *node) {
     this->map.erase(curPair);
     this->bufferManager.buffer.push_back(curPage->bytes);
     curPage->bytes = nullptr;
-    size--;
 }
 
 #endif //LRU_C

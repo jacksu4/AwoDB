@@ -5,6 +5,9 @@
 #include <memory>
 #include "MyDB_PageHandle.h"
 
+
+#include <iostream>
+
 void *MyDB_PageHandleBase :: getBytes () {
 	return this->page->getBytes();
 }
