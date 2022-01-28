@@ -68,6 +68,7 @@ Node *LRU::popTail() {
 
     if(lastNode == head) {
         //undefined behavior
+        std::cout<<"lru is full of pinned page!"<<std::endl;
         exit(1);
     }
 

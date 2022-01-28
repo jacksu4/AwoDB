@@ -157,18 +157,6 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
     for(const auto& entry: lookupTable) {
         MyDB_PagePtr page = entry.second;
         if (page->bytes != nullptr) {
-            if (page->isDirty()) {
-                int fd;
-                if (page->getTable() == nullptr) {
-                    fd = open(tempFile.c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
-                } else {
-                    fd = open(page->getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
-                }
-                lseek(fd, page->getOffset() * this->pageSize, SEEK_SET);
-                write(fd, page->bytes, pageSize);
-                page->setDirty(false);
-                close(fd);
-            }
             free(page->bytes);
         }
     }
