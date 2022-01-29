@@ -9,7 +9,6 @@
 #include <sys/uio.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <iostream>
 
 using namespace std;
 
@@ -56,17 +55,6 @@ MyDB_PageHandle MyDB_BufferManager :: getPinnedPage (const MyDB_TablePtr& whichT
         buffer.pop_back();
     }
 
-    /*
-    int fd;
-    if (page->getTable() == nullptr) {
-        fd = open(tempFile.c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
-    } else {
-        fd = open(page->getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
-    }
-    lseek(fd, page->getOffset() * pageSize, SEEK_SET);
-    read(fd, page->bytes, pageSize);
-    close(fd);
-    */
     return make_shared<MyDB_PageHandleBase>(page);
 }
 

@@ -4,9 +4,6 @@
 #include "MyDB_Page.h"
 #include "MyDB_BufferManager.h"
 
-
-#include <iostream>
-
 MyDB_Page::MyDB_Page(MyDB_TablePtr table, size_t offset, MyDB_BufferManager &bufferManager):
     table(table), offset(offset), bufferManager(bufferManager), bytes(nullptr), refCount(0),
     dirty(false), pinned(false){
