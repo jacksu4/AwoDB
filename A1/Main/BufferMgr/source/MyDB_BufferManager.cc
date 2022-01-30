@@ -91,10 +91,10 @@ void MyDB_BufferManager :: unpin (MyDB_PageHandle unpinMe) {
 void MyDB_BufferManager :: killPage(MyDB_Page& page) {
 
     pair<MyDB_TablePtr, size_t> lookUpKey = make_pair(page.getTable(), page.getOffset());
-
-    if(page.getTable() == nullptr) {
-        anonymousCounter--;
-    }
+//
+//    if(page.getTable() == nullptr) {
+//        anonymousCounter--;
+//    }
 
     //if the page is pinned, just unpin it
     if(lookupTable.count(lookUpKey) && page.isPinned()) {
@@ -108,9 +108,9 @@ void MyDB_BufferManager :: killPage(MyDB_Page& page) {
     int fd;
     if(page.isDirty()) {
         if (page.getTable() == nullptr) {
-            fd = open(tempFile.c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
+            fd = open(tempFile.c_str(), O_CREAT | O_RDWR, 0666);
         } else {
-            fd = open(page.getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
+            fd = open(page.getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR, 0666);
         }
         lseek(fd, page.getOffset() * this->pageSize, SEEK_SET);
         write(fd, page.bytes, pageSize);
@@ -148,23 +148,21 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
             int fd;
             if(page->isDirty()) {
                 if (page->getTable() == nullptr) {
-                    fd = open(tempFile.c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
+                    fd = open(tempFile.c_str(), O_CREAT | O_RDWR, 0666);
                 } else {
-                    fd = open(page->getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
+                    fd = open(page->getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR, 0666);
                 }
                 lseek(fd, page->getOffset() * this->pageSize, SEEK_SET);
                 write(fd, page->bytes, pageSize);
                 page->setDirty(false);
                 close(fd);
             }
-//            free(page->bytes);
         }
     }
 
     for (auto mem: buffer) {
         free(mem);
     }
-
     unlink(tempFile.c_str());
 }
 
@@ -195,9 +193,9 @@ void MyDB_BufferManager::access(MyDB_Page &page) {
 
     int fd;
     if (page.getTable() == nullptr) {
-        fd = open(tempFile.c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
+        fd = open(tempFile.c_str(), O_CREAT | O_RDWR, 0666);
     } else {
-        fd = open(page.getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR | O_FSYNC, 0666);
+        fd = open(page.getTable()->getStorageLoc().c_str(), O_CREAT | O_RDWR, 0666);
     }
     lseek(fd, page.getOffset() * pageSize, SEEK_SET);
     read(fd, page.bytes, pageSize);

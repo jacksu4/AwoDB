@@ -106,7 +106,6 @@ int main () {
             pages[i]->wroteBytes();
         }
         cout << "shutdown manager..." << flush;
-        //killPage->eraseNode->remove will pop error
     }
     cout << "COMPLETE" << endl << flush;
     QUNIT_IS_TRUE(true);
@@ -222,7 +221,9 @@ int main () {
             bytes[i] = (char *)pages[i]->getBytes();
             char c = (char)('A' + i);
             for (int j = 0; j < 64; j++) {
-                if (bytes[i][j] != c) flag8 = false;
+                if (bytes[i][j] != c) {
+                    flag8 = false;
+                }
             }
         }
         if (flag8) cout << "correct..." << flush;

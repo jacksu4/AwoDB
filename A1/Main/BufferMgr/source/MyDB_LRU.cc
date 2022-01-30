@@ -74,7 +74,6 @@ Node *LRU::popTail() {
 
     this->remove(lastNode);
 
-    MyDB_BufferManager manager = this->bufferManager;
     // delete the corresponding entry in map
     MyDB_PagePtr curPage = lastNode->page;
     MyDB_TablePtr table = curPage->getTable();
@@ -82,13 +81,13 @@ Node *LRU::popTail() {
     if(lastNode->page->isDirty()) {
         int file;
         if(!table) {
-            file = open(manager.tempFile.c_str (), O_TRUNC | O_CREAT | O_RDWR | O_FSYNC, 0666);
+            file = open(this->bufferManager.tempFile.c_str (), O_CREAT | O_RDWR, 0666);
         } else {
-            file = open(table->getStorageLoc().c_str (), O_TRUNC | O_CREAT | O_RDWR | O_FSYNC, 0666);
+            file = open(table->getStorageLoc().c_str (), O_CREAT | O_RDWR, 0666);
         }
 
-        lseek(file, curPage->getOffset() * manager.pageSize, SEEK_SET);
-        write(file, curPage->getBytes(), manager.pageSize);
+        lseek(file, curPage->getOffset() * this->bufferManager.pageSize, SEEK_SET);
+        write(file, curPage->bytes, this->bufferManager.pageSize);
         close(file);
         lastNode->page->setDirty(false);
     }
