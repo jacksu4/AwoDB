@@ -110,12 +110,13 @@ Node *LRU::findNode(const pair<MyDB_TablePtr, size_t>& id) {
 Node *LRU::addToMap(const pair<MyDB_TablePtr, size_t>& id, MyDB_PagePtr page) {
     Node *node = new Node(page);
     map[make_pair(id.first, id.second)] = node;
-    
-    if(!(node->page->isPinned())) {
-        addToHead(node);
-    } else {
-        this->capacity--;
-    }
+
+    addToHead(node);
+//    if(!(node->page->isPinned())) {
+//        addToHead(node);
+//    } else {
+//        this->capacity--;
+//    }
     return node;
 }
 
@@ -124,7 +125,10 @@ int LRU::getSize() const {
 }
 
 void LRU::eraseNode(Node *node) {
-    remove(node);
+    if(node->prev && node->next) {
+        remove(node);
+    }
+
     MyDB_PagePtr curPage = node->page;
     pair<MyDB_TablePtr, size_t> curPair = make_pair(curPage->getTable(), curPage->getOffset());
     this->map.erase(curPair);
