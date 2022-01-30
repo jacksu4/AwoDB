@@ -157,7 +157,7 @@ MyDB_BufferManager :: ~MyDB_BufferManager () {
                 page->setDirty(false);
                 close(fd);
             }
-            free(page->bytes);
+//            free(page->bytes);
         }
     }
 
