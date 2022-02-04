@@ -44,12 +44,19 @@ public:
 	// access the i^th page in this file
 	MyDB_PageReaderWriter operator [] (size_t i);
 
-        // access the last page in the file
-        MyDB_PageReaderWriter last ();
+	// access the last page in the file
+	MyDB_PageReaderWriter last ();
 
 private:
 
 	// ANYTHING YOU NEED HERE
+	friend class MyDB_PageReaderWriter;
+
+	MyDB_TablePtr myTable;
+	MyDB_BufferManagerPtr myBufferManager;
+	
+	MyDB_PageReaderWriterPtr curPageManager;
+	
 };
 
 #endif

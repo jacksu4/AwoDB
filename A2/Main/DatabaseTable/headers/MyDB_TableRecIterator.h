@@ -16,6 +16,17 @@ public:
 
     MyDB_TableRecIterator(MyDB_TableReaderWriter &parent, MyDB_TablePtr table, MyDB_RecordPtr record);
     ~MyDB_TableRecIterator() override;
+
+private:
+
+    friend class MyDB_TableReaderWriter;
+
+    MyDB_TableReaderWriter parent;
+    MyDB_RecordPtr rec;
+	size_t curPage;
+
+    MyDB_RecordIteratorPtr curPageIter;
+
 };
 
 
