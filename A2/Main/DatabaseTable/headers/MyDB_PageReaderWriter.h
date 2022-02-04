@@ -30,10 +30,16 @@ public:
 
 	// sets the type of the page
 	void setType (MyDB_PageType toMe);
+
+    MyDB_PageReaderWriter(MyDB_PageHandle page, size_t pageSize);
+
+    ~MyDB_PageReaderWriter();
 	
 private:
 
 	// ANYTHING ELSE YOU WANT HERE
+    MyDB_PageHandle page;
+    size_t pageSize;
 };
 
 #endif

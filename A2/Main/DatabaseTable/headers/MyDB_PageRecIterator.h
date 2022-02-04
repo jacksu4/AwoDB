@@ -9,7 +9,7 @@
 #include "MyDB_Record.h"
 #include "MyDB_RecordIterator.h"
 
-class MyDB_PageRecIterator: public MyDB_RecordIterator {
+class MyDB_PageRecIterator: public MyDB_RecordIterator { //For iterate through records inside a page
 
 public:
     bool hasNext() override;
