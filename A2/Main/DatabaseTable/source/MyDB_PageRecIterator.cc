@@ -20,9 +20,9 @@ bool MyDB_PageRecIterator :: hasNext() {
 
 void MyDB_PageRecIterator :: getNext() {
     if(hasNext()) {
-        char* curAddr = offset + ((char *)(page->getBytes())); //current position inside the page
-        char *nexAddr = (char *) record->fromBinary(curAddr); //see fromBinary comment for explanation. Basically get the next record address
-        offset += nexAddr - curAddr;
+        void *pos = offset + (char *) page->getBytes ();
+        void *nextPos = record->fromBinary (pos);
+        offset += ((char *) nextPos) - ((char *) pos);
     }
 };
 
