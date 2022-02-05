@@ -5,25 +5,28 @@
 #include <fstream>
 #include "MyDB_PageReaderWriter.h"
 #include "MyDB_TableReaderWriter.h"
+#include "MyDB_TableRecIterator.h"
+#include "MyDB_RecordIterator.h"
 
 using namespace std;
 
-MyDB_TableReaderWriter :: MyDB_TableReaderWriter (MyDB_TablePtr forme, MyDB_BufferManagerPtr myBuffer) {
-	myTable = forme;
+MyDB_TableReaderWriter :: MyDB_TableReaderWriter (MyDB_TablePtr forMe, MyDB_BufferManagerPtr myBuffer) {
+	myTable = forMe;
 	myBufferManager = myBuffer;	
 	if(myTable->lastPage() == -1) {
 		myTable->setLastPage(0);
-		myBufferManager->getPage(myTable, 0);
+        (*this)[0].clear();
 	}
 }
 
 MyDB_PageReaderWriter MyDB_TableReaderWriter :: operator [] (size_t i) {
-	while(myTable->lastPage() < i) {
-		myTable->setLastPage(myTable->getLast() + 1);
-		myBufferManager->getPage(myTable, myTable->getLast());
-	}
-	curPageManager = make_shared<MyDB_PageReaderWriter> (make_shared <MyDB_PageHandleBase> (i), myBufferManager->getPageSize());
-	return *curPageManager;
+	MyDB_PageHandle page = myBufferManager->getPage(myTable, i);
+    while(i > myTable->lastPage()) {
+        myTable->setLastPage(myTable->lastPage() + 1);
+        auto tmp = make_shared<MyDB_PageReaderWriter>(page, myBufferManager->getPageSize());
+        tmp->clear();
+    }
+    return *make_shared<MyDB_PageReaderWriter>(page, myBufferManager->getPageSize());
 }
 
 MyDB_RecordPtr MyDB_TableReaderWriter :: getEmptyRecord () {
@@ -31,65 +34,52 @@ MyDB_RecordPtr MyDB_TableReaderWriter :: getEmptyRecord () {
 }
 
 MyDB_PageReaderWriter MyDB_TableReaderWriter :: last () {
-	curPageManager = make_shared<MyDB_PageReaderWriter> (make_shared <MyDB_PageHandleBase> (myTable->lastPage()), myBufferManager->getPageSize());
-	return *curPageManager; 
+	return (*this)[myTable->lastPage()];
 }
 
 
 void MyDB_TableReaderWriter :: append (MyDB_RecordPtr appendMe) {
 	// try to append the record on the current page...
-	MyDB_PageReaderWriterPtr lastPage = 
-	make_shared<MyDB_PageReaderWriter> (make_shared <MyDB_PageHandleBase> (myTable->lastPage()), myBufferManager->getPageSize());
-	if (!lastPage->append (appendMe)) {
-		myTable->setLastPage (myTable->lastPage () + 1);
-		lastPage = make_shared <MyDB_PageReaderWriter> (make_shared <MyDB_PageHandleBase> (myTable->lastPage()), myBufferManager->getPageSize());
-		lastPage->clear ();
-		lastPage->append (appendMe);
-	}
+	while(!this->last().append(appendMe)) {
+        myTable->setLastPage(myTable->lastPage() + 1);
+        (*this)[myTable->lastPage() + 1].clear();
+    }
 }
 
-// TBD(Modify more into my style)
-void MyDB_TableReaderWriter :: loadFromTextFile (string fromMe) {
+void MyDB_TableReaderWriter :: loadFromTextFile (const string& fromMe) {
 	myTable->setLastPage(0);
 
 	// try to open the file
 	string line;
-	ifstream myfile;
-	myfile.open(fromMe);
+	ifstream file(fromMe);
 
 	// if we opened it, read the contents
-	MyDB_RecordPtr tempRec = getEmptyRecord ();
-	if (myfile.is_open()) {
+	if (file.is_open()) {
+        auto rec = getEmptyRecord();
 		// loop through all of the lines
-		while (getline (myfile,line)) {
-			tempRec->fromString (line);		
-			append (tempRec);
+		while (getline(file,line)) {
+			rec->fromString (line);
+			append(rec);
 		}
-		myfile.close ();
+        file.close();
 	}
 }
 
-// TBD
 MyDB_RecordIteratorPtr MyDB_TableReaderWriter :: getIterator (MyDB_RecordPtr iterateIntoMe) {
-	return nullptr;
+    return make_shared<MyDB_TableRecIterator>(*this, myTable, iterateIntoMe);
 }
 
 // TBD
 void MyDB_TableReaderWriter :: writeIntoTextFile (string toMe) {
-	ofstream myfile;
-	myfile.open(toMe);
+	ofstream file(toMe);
 
-	if(myfile.is_open()) {
-		// get an empty record
-		MyDB_RecordPtr tempRec = getEmptyRecord ();;		
-
-		// and write out all of the records
-		MyDB_RecordIteratorPtr myIter = getIterator (tempRec);
-		while (myIter->hasNext ()) {
-			myIter->getNext ();
-		}
-		output.close ();
-	}
+    if(file.is_open()) {
+        auto recIter = getIterator(getEmptyRecord());
+        while(recIter->hasNext()) {
+            recIter->getNext();
+        }
+        file.close();
+    }
 }
 
 #endif

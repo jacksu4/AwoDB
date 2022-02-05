@@ -3,33 +3,35 @@
 //
 
 #include "MyDB_TableRecIterator.h"
+#include "MyDB_PageReaderWriter.h"
+#include <utility>
 
 
 void MyDB_TableRecIterator::getNext() {
     curPageIter->getNext();
 }
 
-// TBD(Modify more into my style)
 bool MyDB_TableRecIterator::hasNext() {
     if (curPageIter->hasNext ()) {
         return true;
     }
-    if(curPage == (this->parent.myTable)->lastPage()) {
-        return false;
+    while(curPage < table->lastPage()) {
+        curPageIter = parent[++curPage].getIterator(rec);
+        if(curPageIter->hasNext()) {
+            return true;
+        }
     }
-
-    curPage++;
-	curPageIter = parent[curPage].getIterator (rec);
-	return hasNext();
+    return false;
 }
 
-MyDB_TableRecIterator::MyDB_TableRecIterator(MyDB_TableReaderWriter &parent, MyDB_RecordPtr record) {
-    this->parent = parent;
-    this->rec = record;
+MyDB_TableRecIterator::MyDB_TableRecIterator(MyDB_TableReaderWriter &parent, MyDB_TablePtr table,
+                                             MyDB_RecordPtr record): parent(
+        (MyDB_TableReaderWriter &) std::move(parent)),
+                                             table(std::move(table)), rec(std::move(record)) {
     this->curPage = 0;
-    this->curPageIter = parent[curPage].getIterator(record);
-
+    this->curPageIter = this->parent[curPage].getIterator(rec);
 }
+
 
 MyDB_TableRecIterator::~MyDB_TableRecIterator() = default;
 

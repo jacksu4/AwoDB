@@ -8,11 +8,13 @@
 #include "MyDB_RecordIterator.h"
 #include "MyDB_Table.h"
 
-// create a smart pointer for the catalog
 using namespace std;
+
+// create a smart pointer for the catalog
 class MyDB_PageReaderWriter;
 class MyDB_TableReaderWriter;
 typedef shared_ptr <MyDB_TableReaderWriter> MyDB_TableReaderWriterPtr;
+typedef shared_ptr<MyDB_PageReaderWriter> MyDB_PageReaderWriterPtr;
 
 class MyDB_TableReaderWriter {
 
@@ -36,7 +38,7 @@ public:
 	MyDB_RecordIteratorPtr getIterator (MyDB_RecordPtr iterateIntoMe);
 
 	// load a text file into this table... overwrites the current contents
-	void loadFromTextFile (string fromMe);
+	void loadFromTextFile (const string& fromMe);
 
 	// dump the contents of this table into a text file
 	void writeIntoTextFile (string toMe);

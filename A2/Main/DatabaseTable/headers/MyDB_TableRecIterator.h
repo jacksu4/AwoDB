@@ -7,10 +7,13 @@
 
 #include "MyDB_RecordIterator.h"
 #include "MyDB_TableReaderWriter.h"
+#include "MyDB_Table.h"
+#include "MyDB_Record.h"
 
 class MyDB_TableRecIterator: public MyDB_RecordIterator {
 
 public:
+
     void getNext() override;
     bool hasNext() override;
 
@@ -21,12 +24,13 @@ private:
 
     friend class MyDB_TableReaderWriter;
 
-    MyDB_TableReaderWriter parent;
+    MyDB_TableReaderWriter &parent;
     MyDB_RecordPtr rec;
 	size_t curPage;
 
     MyDB_RecordIteratorPtr curPageIter;
 
+    MyDB_TablePtr table;
 };
 
 

@@ -3,10 +3,8 @@
 #define PAGE_RW_C
 
 #include "MyDB_PageReaderWriter.h"
-
 #include <utility>
 #include "MyDB_PageRecIterator.h"
-#include "MyDB_PageType.h"
 
 void MyDB_PageReaderWriter :: clear () {
     //access the size info part inside the page memory and set it to 4 (which contains only page type and current size info and has zero records)
