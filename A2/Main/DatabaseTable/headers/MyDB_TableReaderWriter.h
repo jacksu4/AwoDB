@@ -49,10 +49,13 @@ public:
 	// access the last page in the file
 	MyDB_PageReaderWriter last ();
 
+	size_t lastPage();
+
 private:
 
 	// ANYTHING YOU NEED HERE
 	friend class MyDB_PageReaderWriter;
+	friend class MyDB_TableRecIterator;
 
 	MyDB_TablePtr myTable;
 	MyDB_BufferManagerPtr myBufferManager;

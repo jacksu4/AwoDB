@@ -20,12 +20,11 @@ MyDB_TableReaderWriter :: MyDB_TableReaderWriter (MyDB_TablePtr forMe, MyDB_Buff
 }
 
 MyDB_PageReaderWriter MyDB_TableReaderWriter :: operator [] (size_t i) {
-	MyDB_PageHandle page = myBufferManager->getPage(myTable, i);
     while(i > myTable->lastPage()) {
         myTable->setLastPage(myTable->lastPage() + 1);
-        auto tmp = make_shared<MyDB_PageReaderWriter>(page, myBufferManager->getPageSize());
-        tmp->clear();
+		myBufferManager->getPage(myTable, myTable->lastPage());
     }
+	MyDB_PageHandle page = myBufferManager->getPage(myTable, i);
     return *make_shared<MyDB_PageReaderWriter>(page, myBufferManager->getPageSize());
 }
 
@@ -42,27 +41,35 @@ void MyDB_TableReaderWriter :: append (MyDB_RecordPtr appendMe) {
 	// try to append the record on the current page...
 	while(!this->last().append(appendMe)) {
         myTable->setLastPage(myTable->lastPage() + 1);
-        (*this)[myTable->lastPage() + 1].clear();
+        (*this)[myTable->lastPage()].clear();
     }
 }
 
 void MyDB_TableReaderWriter :: loadFromTextFile (const string& fromMe) {
+
 	myTable->setLastPage(0);
+	(*this)[0].clear();
 
 	// try to open the file
 	string line;
-	ifstream file(fromMe);
+	ifstream myfile;
+	myfile.open(fromMe);
 
 	// if we opened it, read the contents
-	if (file.is_open()) {
-        auto rec = getEmptyRecord();
-		// loop through all of the lines
-		while (getline(file,line)) {
-			rec->fromString (line);
-			append(rec);
+
+	MyDB_RecordPtr tempRec = getEmptyRecord();
+
+	if (myfile.is_open()) {
+		int index = 0;
+		while (getline(myfile, line)) {
+			tempRec->fromString(line);
+			append(tempRec);
+			index++;
 		}
-        file.close();
+
+		myfile.close();
 	}
+
 }
 
 MyDB_RecordIteratorPtr MyDB_TableReaderWriter :: getIterator (MyDB_RecordPtr iterateIntoMe) {
@@ -80,6 +87,10 @@ void MyDB_TableReaderWriter :: writeIntoTextFile (string toMe) {
         }
         file.close();
     }
+}
+
+size_t MyDB_TableReaderWriter :: lastPage() {
+	return myTable->lastPage();
 }
 
 #endif
