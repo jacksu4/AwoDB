@@ -60,8 +60,6 @@ private:
 	MyDB_TablePtr myTable;
 	MyDB_BufferManagerPtr myBufferManager;
 	
-	MyDB_PageReaderWriterPtr curPageManager;
-	
 };
 
 #endif
