@@ -15,9 +15,22 @@ using namespace std;
 
 void mergeIntoFile(MyDB_TableReaderWriter &sortIntoMe, vector <MyDB_RecordIteratorAltPtr> &mergeUs, function <bool ()> comparator, MyDB_RecordPtr lhs, MyDB_RecordPtr rhs)
 {
-	std::priority_queue<MyDB_RecordIteratorAltPtr, vector<MyDB_RecordIteratorAltPtr>, RecordComparator> pq(comparator);
-
-	return;
+	std::priority_queue<MyDB_RecordIteratorAltPtr, vector<MyDB_RecordIteratorAltPtr>, RecordComparator> pq(RecordComparator(comparator, lhs, rhs));
+    for (auto single: mergeUs) {
+        if (single->advance()) {
+            pq.push(single);
+        }
+        while(!pq.empty()) {
+            auto record = sortIntoMe.getEmptyRecord();
+            auto cur = pq.top();
+            cur->getCurrent(record);
+            pq.pop();
+            sortIntoMe.append(record);
+            if(cur->advance()) {
+                pq.push(cur);
+            }
+        }
+    }
 }
 
 vector<MyDB_PageReaderWriter> mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_RecordIteratorAltPtr leftIter, MyDB_RecordIteratorAltPtr rightIter, function<bool()> comparator, MyDB_RecordPtr lhs, MyDB_RecordPtr rhs)
@@ -84,7 +97,7 @@ vector<MyDB_PageReaderWriter> mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_R
 
 void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &sortIntoMe, function <bool ()> comparator, MyDB_RecordPtr lhs, MyDB_RecordPtr rhs)
 {
-	MyDB_BufferManagerPtr bufferMgr = make_shared<MyDB_BufferManager>(sortMe.getBufferMgr()->getPageSize(), runSize, 'sortFile');
+	MyDB_BufferManagerPtr bufferMgr = sortMe.getBufferMgr();
 
 	int pageNum = sortMe.getNumPages();
 	queue <vector <MyDB_PageReaderWriter>> pagesList;
@@ -116,16 +129,14 @@ void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &s
 			}
 
 			// After merging finished, construct the input of mergeIntoFile
-			vector <MyDB_RecordIteratorAltPtr> mergeIterList = getIteratorAlt(pagesList.front());
+			MyDB_RecordIteratorAltPtr mergeIterList = getIteratorAlt(pagesList.front());
 			pagesList.pop();
-			pagesIters.insert(pagesIters.end(), mergeIterList.begin(), mergeIterList.end());
+			pagesIters.push_back(mergeIterList);
 		}
 	}
 
 	// Phase 2
 	mergeIntoFile(sortIntoMe, pagesIters, comparator, lhs, rhs);
-
-	return;
 }
 
 #endif
