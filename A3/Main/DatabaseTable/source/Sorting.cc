@@ -23,8 +23,7 @@ void mergeIntoFile(MyDB_TableReaderWriter &sortIntoMe, vector <MyDB_RecordIterat
 vector<MyDB_PageReaderWriter> mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_RecordIteratorAltPtr leftIter, MyDB_RecordIteratorAltPtr rightIter, function<bool()> comparator, MyDB_RecordPtr lhs, MyDB_RecordPtr rhs)
 {
 	vector<MyDB_PageReaderWriter> ret;
-	MyDB_PageReaderWriter curPage = MyDB_PageReaderWriter(parent);
-	RecordComparator comp(comparator, lhs, rhs);
+	MyDB_PageReaderWriter curPage = MyDB_PageReaderWriter(*parent);
 	/*
 	Several cases in the loop:
 	1. Only lhs has next
@@ -41,17 +40,17 @@ vector<MyDB_PageReaderWriter> mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_R
 	bool rightCheck = true;
 	while(leftCheck || rightCheck) {
 		if(leftCheck && leftLast) { // The first time to load or last case was 1 or 3
-			leftIter.getCurrent(lhs);
+			leftIter->getCurrent(lhs);
 			leftLast = false;
 		}
 		if(rightCheck && rightLast) { // The first time to load or last case was 2 or 4
-			rightIter.getCurrent(rhs);
+			rightIter->getCurrent(rhs);
 			rightLast = false;
 		}
 		
 		bool compareRes = false;
 		if(leftCheck && rightCheck) {// If both two records available
-			compareRes = comp(lhs.getCurrentPointer(), rhs.getCurrentPointer());
+			compareRes = comparator();
 		}
 
 		if(
@@ -61,24 +60,25 @@ vector<MyDB_PageReaderWriter> mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_R
 			) {
 			if(!curPage.append(lhs)) {
 				ret.push_back(curPage);
-				curPage = MyDB_PageReaderWriter (parent);
+				curPage = MyDB_PageReaderWriter (*parent);
 				curPage.append(lhs);
 			}
-			leftCheck = leftIter.advance();
+			leftCheck = leftIter->advance();
 			leftLast = true;
 			continue;
 		}
 
 		// If not cases 1 or 3, that is case 2 or 4
-		rightIter.getCurrent(rhs);
+		rightIter->getCurrent(rhs);
 		if(!curPage.append(rhs)) {
 			ret.push_back(curPage);
-			curPage = MyDB_PageReaderWriter (parent);
+			curPage = MyDB_PageReaderWriter (*parent);
 			curPage.append(rhs);
 		}
-		rightCheck = rightIter.advance();
+		rightCheck = rightIter->advance();
 		rightLast = true;
 	}
+    ret.push_back(curPage);
 	return ret;
 }
 
