@@ -84,19 +84,45 @@ vector<MyDB_PageReaderWriter> mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_R
 
 void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &sortIntoMe, function <bool ()> comparator, MyDB_RecordPtr lhs, MyDB_RecordPtr rhs)
 {
-	MyDB_BufferManagerPtr buffer = make_shared<MyDB_BufferManager>(sortMe.getBufferMgr()->getPageSize(), runSize, 'sortFile');
+	MyDB_BufferManagerPtr bufferMgr = make_shared<MyDB_BufferManager>(sortMe.getBufferMgr()->getPageSize(), runSize, 'sortFile');
 
-	// int pageNum = sortMe.getNumPages();
-	// MyDB_RecordIteratorAltPtr leftTableIter = sortMe.getIteratorAlt(0, pageNum / 2);
-	// MyDB_RecordIteratorAltPtr rightTableIter = sortMe.getIteratorAlt((pageNum / 2) + 1, pageNum - 1);
-
-	
+	int pageNum = sortMe.getNumPages();
+	queue <vector <MyDB_PageReaderWriter>> pagesList;
+	vector <MyDB_RecordIteratorAltPtr> pagesIters;
 
 	// Phase 1
-	// vector<MyDB_PageReaderWriter> pages = mergeIntoList(buffer, leftTableIter, rightTableIter, comparator, lhs, rhs);
+	for(int i=0;i<pageNum;i++) {
+		// Get it from file and sort the page
+		MyDB_PageReaderWriter curPage = sortMe[i];
+		curPage.sort(comparator, lhs, rhs);
+
+		// Add the page into list for further merge
+		vector<MyDB_PageReaderWriter> singoList;
+		singoList.push_back(curPage);
+		pagesList.push(singoList);
+
+		// Core part of merging: when the size is full or it comes to the last pages
+		if((pagesList.size() == runSize) || (i == pageNum - 1)) {
+			while(pagesList.size() > 1) {
+				// Get the first two vectors of pages
+				vector <MyDB_PageReaderWriter> firstList = pagesList.front();
+				pagesList.pop();
+				vector <MyDB_PageReaderWriter> secondList = pagesList.front();
+				pagesList.pop();
+
+				// Merge
+				vector <MyDB_PageReaderWriter> mergeList = mergeIntoList(bufferMgr, getIteratorAlt(firstList), getIteratorAlt(firstList), comparator, lhs, rhs);
+				pagesList.push(mergeList);
+			}
+
+			// After merging finished, construct the input of mergeIntoFile
+			vector <MyDB_RecordIteratorAltPtr> mergeIterList = getIteratorAlt(pagesList.front());
+			pagesList.pop();
+			pagesIters.insert(pagesIters.end(), mergeIterList.begin(), mergeIterList.end());
+		}
+	}
 
 	// Phase 2
-	vector<MyDB_RecordIteratorAltPtr> pagesIters = getIteratorAlt(pages);
 	mergeIntoFile(sortIntoMe, pagesIters, comparator, lhs, rhs);
 
 	return;
