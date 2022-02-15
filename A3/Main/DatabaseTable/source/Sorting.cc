@@ -101,7 +101,10 @@ void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &s
 	MyDB_BufferManagerPtr bufferMgr = sortMe.getBufferMgr();
 
 	int pageNum = sortMe.getNumPages();
-	vector <vector <MyDB_PageReaderWriter>> pagesList;
+
+	// vector <vector <MyDB_PageReaderWriter>> pagesList;
+	queue <vector <MyDB_PageReaderWriter>> pagesList;
+
 	vector <MyDB_RecordIteratorAltPtr> pagesIters;
 
 	// Phase 1
@@ -112,46 +115,54 @@ void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &s
 		// Add the page into list for further merge
 		vector<MyDB_PageReaderWriter> singleList;
 		singleList.push_back(*curPage.sort(comparator, lhs, rhs));
-		pagesList.push_back(singleList);
+
+		// pagesList.push_back(singleList);
+		pagesList.push(singleList);
 
 		// Core part of merging: when the size is full or it comes to the last pages
 		if((((i + 1) % runSize == 0) && (i != 0)) || (i == pageNum - 1)) {
-			while(pagesList.size() > 1) {
-				vector <vector <MyDB_PageReaderWriter>> tempPagesList;
-				long size = pagesList.size();
-				long index = 0;
-				while(index + 1 < size){
-					tempPagesList.push_back(mergeIntoList(bufferMgr, getIteratorAlt(pagesList[index]), getIteratorAlt(pagesList[index + 1]), comparator, lhs, rhs));
-					index += 2;
-				}
-				if(index < size){
-					tempPagesList.push_back(pagesList[index]);
-				}
-				pagesList = tempPagesList;
-			}
-
 			// while(pagesList.size() > 1) {
-			// 	int size = pagesList.size();
-			// 	for(;size-2>=0;size-=2) {
-			// 		// Get the first two vectors of pages
-			// 		vector <MyDB_PageReaderWriter> firstList = pagesList.front();
-			// 		pagesList.pop();
-			// 		vector <MyDB_PageReaderWriter> secondList = pagesList.front();
-			// 		pagesList.pop();
-			// 		// Merge
-			// 		vector <MyDB_PageReaderWriter> mergeList = mergeIntoList(bufferMgr, getIteratorAlt(firstList), getIteratorAlt(firstList), comparator, lhs, rhs);
-			// 		pagesList.push(mergeList);
+
+			// 	// vector <vector <MyDB_PageReaderWriter>> tempPagesList;
+
+			// 	long size = pagesList.size();
+			// 	long index = 0;
+			// 	while(index + 1 < size){
+			// 		tempPagesList.push_back(mergeIntoList(bufferMgr, getIteratorAlt(pagesList[index]), getIteratorAlt(pagesList[index + 1]), comparator, lhs, rhs));
+			// 		index += 2;
 			// 	}
-			// 	if(size == 1) {
-			// 		vector <MyDB_PageReaderWriter> rest = pagesList.front();
-			// 		pagesList.pop();
-			// 		pagesList.push(rest);
+			// 	if(index < size){
+			// 		tempPagesList.push_back(pagesList[index]);
 			// 	}
+			// 	pagesList = tempPagesList;
 			// }
 
+			while(pagesList.size() > 1) {
+				long size = pagesList.size();
+				for(;size-2>=0;size-=2) {
+					// Get the first two vectors of pages
+					vector <MyDB_PageReaderWriter> firstList = pagesList.front();
+					pagesList.pop();
+					vector <MyDB_PageReaderWriter> secondList = pagesList.front();
+					pagesList.pop();
+					// Merge
+					vector <MyDB_PageReaderWriter> mergeList = mergeIntoList(bufferMgr, getIteratorAlt(firstList), getIteratorAlt(secondList), comparator, lhs, rhs);
+					pagesList.push(mergeList);
+				}
+				if(size == 1) {
+					vector <MyDB_PageReaderWriter> rest = pagesList.front();
+					pagesList.pop();
+					pagesList.push(rest);
+				}
+			}
+
 			// After merging finished, construct the input of mergeIntoFile
-			pagesIters.push_back(getIteratorAlt(pagesList[0]));
-			pagesList.clear();
+			// pagesIters.push_back(getIteratorAlt(pagesList[0]));
+			pagesIters.push_back(getIteratorAlt(pagesList.front()));
+			// pagesList.clear();
+			while(!pagesList.empty()) {
+				pagesList.pop();
+			}
 		}
 	}
 
