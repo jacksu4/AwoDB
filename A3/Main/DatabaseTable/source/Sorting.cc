@@ -9,28 +9,29 @@
 #include "Sorting.h"
 
 #include "RecordComparator.h"
+#include "RecordIteratorAltComparator.h"
 
 
 using namespace std;
 
 void mergeIntoFile(MyDB_TableReaderWriter &sortIntoMe, vector <MyDB_RecordIteratorAltPtr> &mergeUs, function <bool ()> comparator, MyDB_RecordPtr lhs, MyDB_RecordPtr rhs)
 {
-	std::priority_queue<MyDB_RecordIteratorAltPtr, vector<MyDB_RecordIteratorAltPtr>, RecordComparator> pq(RecordComparator(comparator, lhs, rhs));
+	std::priority_queue<MyDB_RecordIteratorAltPtr, vector<MyDB_RecordIteratorAltPtr>, RecordIteratorAltComparator> pq(RecordIteratorAltComparator(comparator, lhs, rhs));
     for (auto single: mergeUs) {
         if (single->advance()) {
             pq.push(single);
         }
-        while(!pq.empty()) {
-            auto record = sortIntoMe.getEmptyRecord();
-            auto cur = pq.top();
-            cur->getCurrent(record);
-            pq.pop();
-            sortIntoMe.append(record);
-            if(cur->advance()) {
-                pq.push(cur);
-            }
-        }
     }
+	while(!pq.empty()) {
+		auto record = sortIntoMe.getEmptyRecord();
+		auto cur = pq.top();
+		cur->getCurrent(record);
+		pq.pop();
+		sortIntoMe.append(record);
+		if(cur->advance()) {
+			pq.push(cur);
+		}
+	}
 }
 
 vector<MyDB_PageReaderWriter> mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_RecordIteratorAltPtr leftIter, MyDB_RecordIteratorAltPtr rightIter, function<bool()> comparator, MyDB_RecordPtr lhs, MyDB_RecordPtr rhs)
@@ -43,7 +44,6 @@ vector<MyDB_PageReaderWriter> mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_R
 	2. Only rhs has next
 	3. Both lhs and rhs has next, but lhs ordered first
 	4. Both lhs and rhs has next, but rhs ordered first
-
 	If last case belongs to cases 1 and 3, we need to load next record in lhs
 	If last case belongs to cases 2 and 4, we need to load next record in rhs
 	*/
@@ -95,43 +95,63 @@ vector<MyDB_PageReaderWriter> mergeIntoList(MyDB_BufferManagerPtr parent, MyDB_R
 	return ret;
 }
 
+
 void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &sortIntoMe, function <bool ()> comparator, MyDB_RecordPtr lhs, MyDB_RecordPtr rhs)
 {
 	MyDB_BufferManagerPtr bufferMgr = sortMe.getBufferMgr();
 
 	int pageNum = sortMe.getNumPages();
-	queue <vector <MyDB_PageReaderWriter>> pagesList;
+	vector <vector <MyDB_PageReaderWriter>> pagesList;
 	vector <MyDB_RecordIteratorAltPtr> pagesIters;
 
 	// Phase 1
 	for(int i=0;i<pageNum;i++) {
 		// Get it from file and sort the page
 		MyDB_PageReaderWriter curPage = sortMe[i];
-		curPage.sort(comparator, lhs, rhs);
 
 		// Add the page into list for further merge
-		vector<MyDB_PageReaderWriter> singoList;
-		singoList.push_back(curPage);
-		pagesList.push(singoList);
+		vector<MyDB_PageReaderWriter> singleList;
+		singleList.push_back(*curPage.sort(comparator, lhs, rhs));
+		pagesList.push_back(singleList);
 
 		// Core part of merging: when the size is full or it comes to the last pages
-		if((pagesList.size() == runSize) || (i == pageNum - 1)) {
+		if((((i + 1) % runSize == 0) && (i != 0)) || (i == pageNum - 1)) {
 			while(pagesList.size() > 1) {
-				// Get the first two vectors of pages
-				vector <MyDB_PageReaderWriter> firstList = pagesList.front();
-				pagesList.pop();
-				vector <MyDB_PageReaderWriter> secondList = pagesList.front();
-				pagesList.pop();
-
-				// Merge
-				vector <MyDB_PageReaderWriter> mergeList = mergeIntoList(bufferMgr, getIteratorAlt(firstList), getIteratorAlt(firstList), comparator, lhs, rhs);
-				pagesList.push(mergeList);
+				vector <vector <MyDB_PageReaderWriter>> tempPagesList;
+				long size = pagesList.size();
+				long index = 0;
+				while(index + 1 < size){
+					tempPagesList.push_back(mergeIntoList(bufferMgr, getIteratorAlt(pagesList[index]), getIteratorAlt(pagesList[index + 1]), comparator, lhs, rhs));
+					index += 2;
+				}
+				if(index < size){
+					tempPagesList.push_back(pagesList[index]);
+				}
+				pagesList = tempPagesList;
 			}
 
+			// while(pagesList.size() > 1) {
+			// 	int size = pagesList.size();
+			// 	for(;size-2>=0;size-=2) {
+			// 		// Get the first two vectors of pages
+			// 		vector <MyDB_PageReaderWriter> firstList = pagesList.front();
+			// 		pagesList.pop();
+			// 		vector <MyDB_PageReaderWriter> secondList = pagesList.front();
+			// 		pagesList.pop();
+			// 		// Merge
+			// 		vector <MyDB_PageReaderWriter> mergeList = mergeIntoList(bufferMgr, getIteratorAlt(firstList), getIteratorAlt(firstList), comparator, lhs, rhs);
+			// 		pagesList.push(mergeList);
+			// 	}
+			// 	if(size == 1) {
+			// 		vector <MyDB_PageReaderWriter> rest = pagesList.front();
+			// 		pagesList.pop();
+			// 		pagesList.push(rest);
+			// 	}
+			// }
+
 			// After merging finished, construct the input of mergeIntoFile
-			MyDB_RecordIteratorAltPtr mergeIterList = getIteratorAlt(pagesList.front());
-			pagesList.pop();
-			pagesIters.push_back(mergeIterList);
+			pagesIters.push_back(getIteratorAlt(pagesList[0]));
+			pagesList.clear();
 		}
 	}
 

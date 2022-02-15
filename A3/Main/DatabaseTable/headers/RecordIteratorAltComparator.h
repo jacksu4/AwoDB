@@ -1,32 +1,32 @@
-#ifndef REC_COMPARATOR_H
-#define REC_COMPARATOR_H
+#ifndef REC_ITERCOMPARATOR_H
+#define REC_ITERCOMPARATOR_H
 
 #include "MyDB_Record.h"
 #include "MyDB_RecordIteratorAlt.h"
 #include <iostream>
 using namespace std;
 
-class RecordComparator {
+class RecordIteratorAltComparator {
 
 public:
 
-	RecordIteratorAltComparator (function <bool ()> comparatorIn, MyDB_RecordIteratorAltPtr leftIterIn,  MyDB_RecordIteratorAltPtr rightIterIn) {
+	RecordIteratorAltComparator (function <bool ()> comparatorIn, MyDB_RecordPtr lhsIn, MyDB_RecordPtr rhsIn) {
 		comparator = comparatorIn;
-		leftIter = leftIterIn;
-		rightIter = rightIterIn;
+		lhs = lhsIn;
+		rhs = rhsIn;
 	}
 
-	bool operator () (void *lhsPtr, void *rhsPtr) {
-		// lhs->fromBinary (lhsPtr);
-		// rhs->fromBinary (rhsPtr);
-		// return comparator ();
+	bool operator () (MyDB_RecordIteratorAltPtr leftIter, MyDB_RecordIteratorAltPtr rightIter) {
+		leftIter->getCurrent(lhs);
+		rightIter->getCurrent(rhs);
+		return !comparator ();
 	}
 
 private:
 
 	function <bool ()> comparator;
-	MyDB_RecordIteratorAltPtr leftIter;
-	MyDB_RecordIteratorAltPtr rightIter;
+	MyDB_RecordPtr lhs;
+	MyDB_RecordPtr rhs;
 
 };
 
