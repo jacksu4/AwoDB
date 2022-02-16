@@ -27,10 +27,10 @@ void mergeIntoFile(MyDB_TableReaderWriter &sortIntoMe, vector <MyDB_RecordIterat
 		auto cur = pq.top();
 		cur->getCurrent(record);
 		pq.pop();
+        if(cur->advance()) {
+            pq.push(cur);
+        }
 		sortIntoMe.append(record);
-		if(cur->advance()) {
-			pq.push(cur);
-		}
 	}
 }
 
@@ -102,7 +102,6 @@ void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &s
 
 	int pageNum = sortMe.getNumPages();
 
-	// vector <vector <MyDB_PageReaderWriter>> pagesList;
 	queue <vector <MyDB_PageReaderWriter>> pagesList;
 
 	vector <MyDB_RecordIteratorAltPtr> pagesIters;
@@ -121,22 +120,6 @@ void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &s
 
 		// Core part of merging: when the size is full or it comes to the last pages
 		if((((i + 1) % runSize == 0) && (i != 0)) || (i == pageNum - 1)) {
-			// while(pagesList.size() > 1) {
-
-			// 	// vector <vector <MyDB_PageReaderWriter>> tempPagesList;
-
-			// 	long size = pagesList.size();
-			// 	long index = 0;
-			// 	while(index + 1 < size){
-			// 		tempPagesList.push_back(mergeIntoList(bufferMgr, getIteratorAlt(pagesList[index]), getIteratorAlt(pagesList[index + 1]), comparator, lhs, rhs));
-			// 		index += 2;
-			// 	}
-			// 	if(index < size){
-			// 		tempPagesList.push_back(pagesList[index]);
-			// 	}
-			// 	pagesList = tempPagesList;
-			// }
-
 			while(pagesList.size() > 1) {
 				long size = pagesList.size();
 				for(;size-2>=0;size-=2) {
@@ -155,11 +138,7 @@ void sort(int runSize, MyDB_TableReaderWriter &sortMe, MyDB_TableReaderWriter &s
 					pagesList.push(rest);
 				}
 			}
-
-			// After merging finished, construct the input of mergeIntoFile
-			// pagesIters.push_back(getIteratorAlt(pagesList[0]));
 			pagesIters.push_back(getIteratorAlt(pagesList.front()));
-			// pagesList.clear();
 			while(!pagesList.empty()) {
 				pagesList.pop();
 			}
