@@ -73,7 +73,7 @@ public:
 	
 	// sorts the contents of the page... the boolean lambda that is sent into
 	// this function must check to see if the contents of the record pointed to
-	// by lhs are less than the contens of the record pointed to by rhs... typically,
+	// by lhs are less than the contents of the record pointed to by rhs... typically,
 	// this lambda would have been created via a call to buildRecordComparator
 	MyDB_PageReaderWriterPtr sort (function <bool ()> comparator, MyDB_RecordPtr lhs,  MyDB_RecordPtr rhs);
 
