@@ -145,7 +145,14 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
     size_t sizeOfSplitMe = 0;
 
     while(iterator->advance()) { // get the size
+        iterator->getCurrent(tmpRecord);
         sizeOfSplitMe++;
+    }
+
+    if(pageType == RegularPage) {
+        tmpRecord = getEmptyRecord();
+    } else {
+        tmpRecord = getINRecord();
     }
 
     size_t median = sizeOfSplitMe / 2 + 1, count = 0;
