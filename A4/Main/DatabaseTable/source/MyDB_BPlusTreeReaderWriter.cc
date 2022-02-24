@@ -59,21 +59,23 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
         return true;
     } else {
         MyDB_INRecordPtr lowRec = getINRecord(), highRec = getINRecord(), curRec = getINRecord();
-        function<bool ()> curIsLowerThanLowRec = buildComparator(curRec, lowRec), curIsHigherThanHighRec = buildComparator(highRec, curRec);
         lowRec->setKey(low);
         highRec->setKey(high);
+        function<bool ()> curIsLowerThanLowRec = buildComparator(curRec, lowRec), curIsHigherThanHighRec = buildComparator(highRec, curRec);
 
         MyDB_RecordIteratorAltPtr iterator = searchPage.getIteratorAlt();
 
         bool leaf = false;
         while(iterator->advance()) {
             iterator->getCurrent(curRec);
-            if(!curIsHigherThanHighRec && !curIsLowerThanLowRec) { //within the high and low bound, continue
-                if (leaf) {
-                    list.push_back((*this)[curRec->getPtr()]);
-                } else {
-                    leaf = discoverPages(curRec->getPtr(), list, low, high);
-                }
+            if(!curIsLowerThanLowRec()) {
+                leaf = true;
+            }
+            if(leaf) { //within the low bound, continue
+                discoverPages(curRec->getPtr(), list, low, high);
+            }
+            if(curIsHigherThanHighRec()) {
+                return false;
             }
         }
         return false;
@@ -89,6 +91,9 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
         int pageLoc = getTable()->lastPage() + 1;
         getTable()->setLastPage(pageLoc);
 
+        MyDB_PageReaderWriter leaf = (*this)[pageLoc];
+        leaf.clear();
+        leaf.setType(RegularPage);
         internalNode->setPtr(pageLoc);
         root.append(internalNode);
     }
