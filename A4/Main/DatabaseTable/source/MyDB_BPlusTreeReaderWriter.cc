@@ -82,21 +82,15 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
 
 void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
     if (rootLocation == -1) { // empty B+ tree
-        std::cout<<"go into empty tree"<<std::endl;
         auto root = (*this)[++rootLocation];
         root.setType(DirectoryPage);
-        root.clear();
         MyDB_INRecordPtr internalNode = getINRecord();
 
         int pageLoc = getTable()->lastPage() + 1;
         getTable()->setLastPage(pageLoc);
 
-        MyDB_PageReaderWriter leaf = (*this)[pageLoc];
-        leaf.clear();
-        leaf.setType(RegularPage);
         internalNode->setPtr(pageLoc);
-        leaf.append(appendMe);
-        std::cout<<"end empty tree"<<std::endl;
+        root.append(internalNode);
     }
     MyDB_RecordPtr res = append(rootLocation, appendMe);
     if (res) {
@@ -107,7 +101,7 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
         newPage.setType(DirectoryPage);
         auto tmp = getINRecord();
         tmp->setPtr(rootLocation);
-        newPage.append(appendMe);
+        newPage.append(res);
         newPage.append(tmp);
         rootLocation = newRoot;
     }
@@ -126,23 +120,21 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
     MyDB_INRecordPtr recordPtr = getINRecord();
     recordPtr->setPtr(idx);
 
-    std::cout << "start split" << std::endl;
-
     MyDB_RecordPtr lhs, rhs;
-    MyDB_PageType pageType;
+    MyDB_PageType pageType = splitMe.getType();
     MyDB_RecordPtr tmpRecord;
 
-    if (splitMe.getType() == RegularPage) {
-        lhs = getEmptyRecord(), rhs = getEmptyRecord(), tmpRecord = getEmptyRecord();;
-        pageType = RegularPage;
+    if (pageType == RegularPage) {
+        lhs = getEmptyRecord(), rhs = getEmptyRecord(), tmpRecord = getEmptyRecord();
+        pageOne.setType(RegularPage);
+        pageTwo.setType(RegularPage);
     } else {
-        lhs = getINRecord(), rhs = getINRecord(), tmpRecord = getINRecord();;
-        pageType = DirectoryPage;
+        lhs = getINRecord(), rhs = getINRecord(), tmpRecord = getINRecord();
+        pageOne.setType(DirectoryPage);
+        pageTwo.setType(DirectoryPage);
     }
     function<bool()> comparator = buildComparator(lhs, rhs);
     splitMe.sortInPlace(comparator, lhs, rhs);
-
-    std::cout << "finish split me sort" << std::endl;
 
     MyDB_RecordIteratorAltPtr iterator = splitMe.getIteratorAlt();
     size_t sizeOfSplitMe = 0;
@@ -151,8 +143,6 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
         iterator->getCurrent(tmpRecord);
         sizeOfSplitMe++;
     }
-
-    std::cout << "finish counting size of splitMe" << std::endl;
 
     if (pageType == RegularPage) {
         tmpRecord = getEmptyRecord();
@@ -163,26 +153,18 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
     size_t median = sizeOfSplitMe / 2 - 1, count = 0;
     iterator = splitMe.getIteratorAlt();
 
-    std::cout << sizeOfSplitMe << std::endl;
-    std::cout << "start splitMe iteration" << std::endl;
-
     while (iterator->advance()) {
-        std::cout << "Iterating" << std::endl;
         iterator->getCurrent(tmpRecord);
         if (count == median) {
-            std::cout << "count equals median" << std::endl;
             recordPtr->setKey(getKey(tmpRecord));
         }
         if (count <= median) {
             pageOne.append(tmpRecord);
         } else {
-            std::cout << "Append p2" << std::endl;
             pageTwo.append(tmpRecord);
         }
         count++;
     }
-
-    std::cout << "finish assigning p1&p2" << std::endl;
 
     auto andMeInNewPage = buildComparator(andMe, recordPtr);
     if (andMeInNewPage()) {
@@ -193,16 +175,15 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
         pageTwo.sortInPlace(comparator, lhs, rhs);
     }
 
-    std::cout << "finish sorting p1 or p2" << std::endl;
-
-    iterator = pageTwo.getIteratorAlt();
-    tmpRecord = getEmptyRecord();
     splitMe.clear();
-
     if (pageType == DirectoryPage) {
         splitMe.setType(DirectoryPage);
+    }
+    iterator = pageTwo.getIteratorAlt();
+    if (pageType == RegularPage) {
+        tmpRecord = getEmptyRecord();
     } else {
-        splitMe.setType(RegularPage);
+        tmpRecord = getINRecord();
     }
 
         while (iterator->advance()) {
@@ -210,48 +191,47 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
             splitMe.append(tmpRecord);
         }
 
-        std::cout << "finish put p2 back to splitMe" << std::endl;
-
         pageTwo.clear();
-
-        std::cout << "end split" << std::endl;
-
         return recordPtr;
 
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordPtr appendMe) {
+//    printTree();
     MyDB_PageReaderWriter page = (*this)[whichPage];
-    if(page.getType() == RegularPage) {
-        if(page.append(appendMe)) {
+    if (!appendMe->getSchema()) {
+        if (page.append(appendMe)) {
+            MyDB_INRecordPtr lhs = getINRecord(), rhs = getINRecord();
+            function<bool()> myComparator = buildComparator(getINRecord(), getINRecord());
+            page.sortInPlace(myComparator, lhs, rhs);
             return nullptr;
         } else {
-            std::cout<<"go into split"<<std::endl;
-            return split(page, appendMe);
+            return split((*this)[whichPage], appendMe);
         }
     } else {
-        MyDB_RecordIteratorAltPtr iteratorPtr = page.getIteratorAlt();
-        MyDB_INRecordPtr recordPtr = getINRecord();
-
-        std::cout<<"start private append while loop"<<std::endl;
-        while(iteratorPtr->advance()) {
-            iteratorPtr->getCurrent(recordPtr);
-            auto appendMeSmaller = buildComparator(appendMe, recordPtr);
-            if(appendMeSmaller) {
-                auto resRecPtr = append(recordPtr->getPtr(), appendMe);
-                if(resRecPtr) {
-                    return append(whichPage, resRecPtr);
+        if (page.getType() == MyDB_PageType::RegularPage) {
+            if (page.append(appendMe)) {
+                return nullptr;
+            } else {
+                return split((*this)[whichPage], appendMe);
+            }
+        } else {
+            MyDB_RecordIteratorAltPtr recordIter = page.getIteratorAlt();
+            MyDB_INRecordPtr record = getINRecord();
+            while (recordIter->advance()) {
+                recordIter->getCurrent(record);
+                function<bool()> myComparator = buildComparator(appendMe, record);
+                if (myComparator()) {
+                    auto res = append(record->getPtr(), appendMe);
+                    if (!res) {
+                        return nullptr;
                     } else {
-                        return append(whichPage, resRecPtr);
+                        return append(whichPage, res);
                     }
-                } else {
-                    return nullptr;
                 }
             }
         }
-        std::cout<<"end private append while loop"<<std::endl;
     }
-    return nullptr;
 }
 
 MyDB_INRecordPtr MyDB_BPlusTreeReaderWriter :: getINRecord () {
