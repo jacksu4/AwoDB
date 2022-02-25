@@ -64,14 +64,10 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
         function<bool ()> curIsLowerThanLowRec = buildComparator(curRec, lowRec), curIsHigherThanHighRec = buildComparator(highRec, curRec);
 
         MyDB_RecordIteratorAltPtr iterator = searchPage.getIteratorAlt();
-
-        bool leaf = false;
+        
         while(iterator->advance()) {
             iterator->getCurrent(curRec);
-            if(!curIsLowerThanLowRec()) {
-                leaf = true;
-            }
-            if(leaf) { //within the low bound, continue
+            if(!curIsLowerThanLowRec()) { //within the low bound, continue
                 discoverPages(curRec->getPtr(), list, low, high);
             }
             if(curIsHigherThanHighRec()) {
