@@ -207,7 +207,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordP
     if (!appendMe->getSchema()) {
         if (page.append(appendMe)) {
             MyDB_INRecordPtr lhs = getINRecord(), rhs = getINRecord();
-            function<bool()> myComparator = buildComparator(getINRecord(), getINRecord());
+            function<bool()> myComparator = buildComparator(lhs, rhs);
             page.sortInPlace(myComparator, lhs, rhs);
             return nullptr;
         } else {
@@ -237,6 +237,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordP
             }
         }
     }
+    return nullptr;
 }
 
 MyDB_INRecordPtr MyDB_BPlusTreeReaderWriter :: getINRecord () {
