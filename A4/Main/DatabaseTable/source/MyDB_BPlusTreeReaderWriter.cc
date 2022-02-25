@@ -64,7 +64,7 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
         function<bool ()> curIsLowerThanLowRec = buildComparator(curRec, lowRec), curIsHigherThanHighRec = buildComparator(highRec, curRec);
 
         MyDB_RecordIteratorAltPtr iterator = searchPage.getIteratorAlt();
-
+        
         while(iterator->advance()) {
             iterator->getCurrent(curRec);
             if(!curIsLowerThanLowRec()) { //within the low bound, continue
@@ -87,6 +87,9 @@ void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
         int pageLoc = getTable()->lastPage() + 1;
         getTable()->setLastPage(pageLoc);
 
+        MyDB_PageReaderWriter leaf = (*this)[pageLoc];
+        leaf.clear();
+        leaf.setType(RegularPage);
         internalNode->setPtr(pageLoc);
         root.append(internalNode);
     }
