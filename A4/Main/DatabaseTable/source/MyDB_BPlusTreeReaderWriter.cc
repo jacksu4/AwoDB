@@ -57,25 +57,24 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
     if (searchPage.getType() == RegularPage) {
         list.push_back(searchPage);
         return true;
-    } else {
-        MyDB_INRecordPtr lowRec = getINRecord(), highRec = getINRecord(), curRec = getINRecord();
-        lowRec->setKey(low);
-        highRec->setKey(high);
-        function<bool ()> curIsLowerThanLowRec = buildComparator(curRec, lowRec), curIsHigherThanHighRec = buildComparator(highRec, curRec);
-
-        MyDB_RecordIteratorAltPtr iterator = searchPage.getIteratorAlt();
-        
-        while(iterator->advance()) {
-            iterator->getCurrent(curRec);
-            if(!curIsLowerThanLowRec()) { //within the low bound, continue
-                discoverPages(curRec->getPtr(), list, low, high);
-            }
-            if(curIsHigherThanHighRec()) {
-                return false;
-            }
-        }
-        return false;
     }
+    MyDB_INRecordPtr lowRec = getINRecord(), highRec = getINRecord(), curRec = getINRecord();
+    lowRec->setKey(low);
+    highRec->setKey(high);
+    function<bool ()> curIsLowerThanLowRec = buildComparator(curRec, lowRec), curIsHigherThanHighRec = buildComparator(highRec, curRec);
+
+    MyDB_RecordIteratorAltPtr iterator = searchPage.getIteratorAlt();
+    
+    while(iterator->advance()) {
+        iterator->getCurrent(curRec);
+        if(!curIsLowerThanLowRec()) { //within the low bound, continue
+            discoverPages(curRec->getPtr(), list, low, high);
+        }
+        if(curIsHigherThanHighRec()) {
+            break;
+        }
+    }
+    return false;
 }
 
 void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
@@ -187,13 +186,13 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
         tmpRecord = getINRecord();
     }
 
-        while (iterator->advance()) {
-            iterator->getCurrent(tmpRecord);
-            splitMe.append(tmpRecord);
-        }
+    while (iterator->advance()) {
+        iterator->getCurrent(tmpRecord);
+        splitMe.append(tmpRecord);
+    }
 
-        pageTwo.clear();
-        return recordPtr;
+    pageTwo.clear();
+    return recordPtr;
 
 }
 
@@ -241,6 +240,34 @@ MyDB_INRecordPtr MyDB_BPlusTreeReaderWriter :: getINRecord () {
 }
 
 void MyDB_BPlusTreeReaderWriter :: printTree () {
+    printHelper(this->rootLocation, 0);
+}
+
+void MyDB_BPlusTreeReaderWriter::printHelper(int whichPage, int depth) {
+    MyDB_PageReaderWriter page = (*this)[whichPage];
+    MyDB_RecordIteratorAltPtr recordIter = page.getIteratorAlt();
+
+    // leaf
+    if (page.getType() == MyDB_PageType::RegularPage) {
+        MyDB_RecordPtr record = getEmptyRecord();
+        while (recordIter->advance()) {
+            recordIter->getCurrent(record);
+            cout << depth << "\n";
+            cout << record << "\n";
+        }
+        cout << "\n";
+    }
+        // inner node
+    else {
+        MyDB_INRecordPtr inRecord = getINRecord();
+        while (recordIter->advance()) {
+            recordIter->getCurrent(inRecord);
+            printHelper(inRecord->getPtr(), depth + 1);
+            cout << depth << "\n";
+            cout << inRecord->getKey() << "\n";
+        }
+        cout << "\n";
+    }
 }
 
 MyDB_AttValPtr MyDB_BPlusTreeReaderWriter :: getKey (MyDB_RecordPtr fromMe) {
