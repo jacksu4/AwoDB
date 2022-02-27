@@ -79,31 +79,31 @@ bool MyDB_BPlusTreeReaderWriter :: discoverPages (int whichPage, vector <MyDB_Pa
 }
 
 void MyDB_BPlusTreeReaderWriter :: append (MyDB_RecordPtr appendMe) {
-    if (rootLocation == -1) { // empty B+ tree
-        auto root = (*this)[++rootLocation];
+    if (getNumPages() <= 1) { // empty B+ tree
+        MyDB_PageReaderWriter root = (*this)[++rootLocation]; // Set an Internal node root page
         root.setType(DirectoryPage);
         MyDB_INRecordPtr internalNode = getINRecord();
 
         int pageLoc = getTable()->lastPage() + 1;
         getTable()->setLastPage(pageLoc);
 
-        MyDB_PageReaderWriter leaf = (*this)[pageLoc];
+        MyDB_PageReaderWriter leaf = (*this)[pageLoc]; // Set a leaf page
         leaf.clear();
         leaf.setType(RegularPage);
         internalNode->setPtr(pageLoc);
-        root.append(internalNode);
+        root.append(internalNode); // Append the INRecord with the leaf page ptr to the root page
     }
-    MyDB_RecordPtr res = append(rootLocation, appendMe);
-    if (res) {
-        int newRoot = getTable()->lastPage() + 1;
+    MyDB_RecordPtr splitRes = append(rootLocation, appendMe);
+    if (splitRes) { // If there's a split in root
+        int newRoot = getTable()->lastPage() + 1; // set the new Root
         getTable()->setLastPage(newRoot);
-        auto newPage = (*this)[newRoot];
+        MyDB_PageReaderWriter newPage = (*this)[newRoot];
         newPage.clear();
         newPage.setType(DirectoryPage);
-        auto tmp = getINRecord();
-        tmp->setPtr(rootLocation);
-        newPage.append(res);
-        newPage.append(tmp);
+        newPage.append(splitRes); // set two ptrs on new root. One toward the new split INRecord, one toward the old root.
+        MyDB_INRecordPtr oldRoot = getINRecord();
+        oldRoot->setPtr(rootLocation);
+        newPage.append(oldRoot);
         rootLocation = newRoot;
     }
 }
@@ -121,9 +121,8 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
     MyDB_INRecordPtr recordPtr = getINRecord();
     recordPtr->setPtr(idx);
 
-    MyDB_RecordPtr lhs, rhs;
+    MyDB_RecordPtr lhs, rhs, tmpRecord;
     MyDB_PageType pageType = splitMe.getType();
-    MyDB_RecordPtr tmpRecord;
 
     if (pageType == RegularPage) {
         lhs = getEmptyRecord(), rhs = getEmptyRecord(), tmpRecord = getEmptyRecord();
@@ -138,7 +137,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
     splitMe.sortInPlace(comparator, lhs, rhs);
 
     MyDB_RecordIteratorAltPtr iterator = splitMe.getIteratorAlt();
-    size_t sizeOfSplitMe = 0;
+    int sizeOfSplitMe = 0;
 
     while (iterator->advance()) { // get the size
         iterator->getCurrent(tmpRecord);
@@ -151,7 +150,7 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
         tmpRecord = getINRecord();
     }
 
-    size_t median = sizeOfSplitMe / 2 - 1, count = 0;
+    int median = sizeOfSplitMe / 2, count = 0;
     iterator = splitMe.getIteratorAlt();
 
     while (iterator->advance()) {
@@ -191,45 +190,36 @@ MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: split (MyDB_PageReaderWriter splitM
             iterator->getCurrent(tmpRecord);
             splitMe.append(tmpRecord);
         }
-
         pageTwo.clear();
         return recordPtr;
 
 }
 
 MyDB_RecordPtr MyDB_BPlusTreeReaderWriter :: append (int whichPage, MyDB_RecordPtr appendMe) {
-//    printTree();
     MyDB_PageReaderWriter page = (*this)[whichPage];
-    if (!appendMe->getSchema()) {
+    if (!appendMe->getSchema() || page.getType() == RegularPage) { // Internal node record case or Regular page with regular record appendMe
         if (page.append(appendMe)) {
-            MyDB_INRecordPtr lhs = getINRecord(), rhs = getINRecord();
-            function<bool()> myComparator = buildComparator(lhs, rhs);
-            page.sortInPlace(myComparator, lhs, rhs);
+            if (!appendMe->getSchema()) { // If Internal node case, need to sort based on the proj description
+                MyDB_INRecordPtr lhs = getINRecord(), rhs = getINRecord();
+                auto myComparator = buildComparator(lhs, rhs);
+                page.sortInPlace(myComparator, lhs, rhs);
+            }
             return nullptr;
         } else {
-            return split((*this)[whichPage], appendMe);
+            return split(page, appendMe);
         }
-    } else {
-        if (page.getType() == MyDB_PageType::RegularPage) {
-            if (page.append(appendMe)) {
-                return nullptr;
-            } else {
-                return split((*this)[whichPage], appendMe);
-            }
-        } else {
-            MyDB_RecordIteratorAltPtr recordIter = page.getIteratorAlt();
-            MyDB_INRecordPtr record = getINRecord();
-            while (recordIter->advance()) {
-                recordIter->getCurrent(record);
-                function<bool()> myComparator = buildComparator(appendMe, record);
-                if (myComparator()) {
-                    auto res = append(record->getPtr(), appendMe);
-                    if (!res) {
-                        return nullptr;
-                    } else {
-                        return append(whichPage, res);
-                    }
+    } else { // Internal node page with regular record
+        MyDB_RecordIteratorAltPtr recordIter = page.getIteratorAlt();
+        MyDB_INRecordPtr record = getINRecord();
+        while (recordIter->advance()) {
+            recordIter->getCurrent(record);
+            auto myComparator = buildComparator(appendMe, record);
+            if (myComparator()) {
+                auto res = append(record->getPtr(), appendMe); // Recursively find the appropriate node
+                if (res) {
+                    return append(whichPage, res); // if there is return ptr which means split happens, append that to the current record
                 }
+                return nullptr;
             }
         }
     }
@@ -245,7 +235,7 @@ void MyDB_BPlusTreeReaderWriter :: printTree () {
 
 MyDB_AttValPtr MyDB_BPlusTreeReaderWriter :: getKey (MyDB_RecordPtr fromMe) {
 
-	// in this case, got an IN re   cord
+	// in this case, got an IN record
 	if (fromMe->getSchema () == nullptr) 
 		return fromMe->getAtt (0)->getCopy ();
 
