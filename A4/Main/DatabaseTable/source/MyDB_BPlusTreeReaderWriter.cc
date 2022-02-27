@@ -242,8 +242,8 @@ void MyDB_BPlusTreeReaderWriter::printHelper(int whichPage, int depth) {
         MyDB_RecordPtr record = getEmptyRecord();
         while (recordIter->advance()) {
             recordIter->getCurrent(record);
-            cout << depth << "\n";
-            cout << record << "\n";
+            cout << depth << "\t";
+            cout << (record->getAtt(0))->toInt() << "\t";
         }
         cout << "\n";
     }
@@ -253,8 +253,8 @@ void MyDB_BPlusTreeReaderWriter::printHelper(int whichPage, int depth) {
         while (recordIter->advance()) {
             recordIter->getCurrent(inRecord);
             printHelper(inRecord->getPtr(), depth + 1);
-            cout << depth << "\n";
-            cout << inRecord->getKey() << "\n";
+            cout << depth << "\t";
+            cout << inRecord->getPtr() << "\t";
         }
         cout << "\n";
     }

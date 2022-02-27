@@ -1,5 +1,5 @@
 # Assignment 4
 
-Author: Jingcheng Su, Qiaomu Zhang
+Author: Jack Su, Charm Zhang
 
 Net ID: js205, qz40
