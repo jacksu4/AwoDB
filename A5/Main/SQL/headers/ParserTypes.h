@@ -272,11 +272,16 @@ public:
             correct = false;
         }
 
-        // making sure selected attributes are in grouping clause
         for (ExprTreePtr valueToSelect: valuesToSelect) {
+            if (!valueToSelect->check(catalog, tablesToProcess)) {
+                return;
+            }
+        	// making sure selected attributes are in grouping clause
             if (valueToSelect->getExpType() == "IDENTIFIER") {
                 correct = false;
+				cout << valueToSelect->toString() << endl;
                 for (ExprTreePtr groupingClause: groupingClauses) {
+					cout << groupingClause->getExpType() + groupingClause->toString() << endl;
                     if (groupingClause->getExpType() == "IDENTIFIER" && valueToSelect->toString() == groupingClause->toString()) {
                         correct = true;
                         break;
@@ -289,14 +294,7 @@ public:
             }
         }
 
-        for (ExprTreePtr valueToSelect: valuesToSelect) {
-            if (!valueToSelect->check(catalog, tablesToProcess)) {
-                return;
-            }
-        }
-
-
-        for (auto disjunction: allDisjunctions) {
+        for (ExprTreePtr disjunction: allDisjunctions) {
             if (!disjunction->check(catalog, tablesToProcess)) {
                 return;
             }
@@ -352,13 +350,10 @@ public:
 		return myTableToCreate.addToCatalog (storageDir, addToMe);
 	}		
 	
-	void printSFWQuery () {
+	void printSFWQuery (MyDB_CatalogPtr catalog) {
 		myQuery.print ();
+		myQuery.check(catalog);
 	}
-
-    void check(MyDB_CatalogPtr catalog) {
-        myQuery.check(catalog);
-    }
 
 	#include "FriendDecls.h"
 };

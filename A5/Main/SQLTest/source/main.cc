@@ -162,8 +162,7 @@ int main (int numArgs, char **args) {
 					} else if (final->isSFWQuery ()) {
 
 						// print it out
-						final->printSFWQuery ();
-                        final->check(myCatalog);
+						final->printSFWQuery (myCatalog);
 					}
 
 					// get outta here
