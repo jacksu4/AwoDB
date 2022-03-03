@@ -271,7 +271,21 @@ public:
             correct = false;
         }
 
+        // making sure selected attributes are in grouping clause
         for (ExprTreePtr valueToSelect: valuesToSelect) {
+            if (valueToSelect->getExpType() == "IDENTIFIER") {
+                correct = false;
+                for (ExprTreePtr groupingClause: groupingClauses) {
+                    if (groupingClause->getExpType() == "IDENTIFIER" && valueToSelect->toString() == groupingClause->toString()) {
+                        correct = true;
+                        break;
+                    }
+                }
+                if (!correct) {
+                    cout << "Error: Value " + valueToSelect->toString() + " being selected is not in grouping clauses" << endl;
+					return;
+                }
+            }
             if (!valueToSelect->check(catalog, tablesToProcess)) {
                 return;
             }
@@ -286,22 +300,6 @@ public:
         for (ExprTreePtr groupingClause: groupingClauses) {
             if (!groupingClause->check(catalog, tablesToProcess)) {
                 return;
-            }
-        }
-
-        // making sure selected attributes are in grouping clause
-        for (ExprTreePtr valueToSelect: valuesToSelect) {
-            if (valueToSelect->getExpType() == "IDENTIFIER") {
-                correct = false;
-                for (ExprTreePtr groupingClause: groupingClauses) {
-                    if (groupingClause->getExpType() == "IDENTIFIER" && valueToSelect->toString() == groupingClause->toString()) {
-                        correct = true;
-                        break;
-                    }
-                }
-                if (!correct) {
-                    cout << "Error: Value " + valueToSelect->toString() + " being selected is not in grouping clauses" << endl;
-                }
             }
         }
 
@@ -349,13 +347,10 @@ public:
 		return myTableToCreate.addToCatalog (storageDir, addToMe);
 	}		
 	
-	void printSFWQuery () {
+	void printSFWQuery (MyDB_CatalogPtr catalog) {
 		myQuery.print ();
+		myQuery.check(catalog);
 	}
-
-    void check(MyDB_CatalogPtr catalog) {
-        myQuery.check(catalog);
-    }
 
 	#include "FriendDecls.h"
 };

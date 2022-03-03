@@ -188,9 +188,9 @@ public:
             return false;
         }
 
-        if (tmpAttr.compare("int") == 0 || tmpAttr.compare("double") == 0) {
+        if (tmpAttr == "int" || tmpAttr == "double") {
             expType = "NUMBER";
-        } else if (tmpAttr.compare("string") == 0) {
+        } else if (tmpAttr == "string") {
             expType = "STRING";
         } else {
             expType = "BOOLEAN";
@@ -233,7 +233,7 @@ public:
             return false;
         }
 
-        string lhsType = lhs->getExpType(), rhsType = rhs->getExpType();
+        string lhsType = lhs->getType(), rhsType = rhs->getType();
 
         if (lhsType != "NUMBER" || rhsType != "NUMBER") {
             cout << "Error: In minus operation, one of the variables is not number!" << endl;
@@ -279,7 +279,7 @@ public:
             return false;
         }
 
-        string lhsType = lhs->getExpType(), rhsType = rhs->getExpType();
+        string lhsType = lhs->getType(), rhsType = rhs->getType();
 
         if (lhsType != rhsType) {
             cout << "Error: In plus operation, the type of two variables are not the same!" << endl;
@@ -332,7 +332,7 @@ public:
             return false;
         }
 
-        string lhsType = lhs->getExpType(), rhsType = rhs->getExpType();
+        string lhsType = lhs->getType(), rhsType = rhs->getType();
 
         if (lhsType != "NUMBER" || rhsType != "NUMBER") {
             cout << "Error: In times operation, one of the variables is not number!" << endl;
@@ -376,7 +376,7 @@ public:
             return false;
         }
 
-        string lhsType = lhs->getExpType(), rhsType = rhs->getExpType();
+        string lhsType = lhs->getType(), rhsType = rhs->getType();
 
         if (lhsType != "NUMBER" || rhsType != "NUMBER") {
             cout << "Error: In divide operation, one of the variables is not number!" << endl;
@@ -420,7 +420,7 @@ public:
             return false;
         }
 
-        string lhsType = lhs->getExpType(), rhsType = rhs->getExpType();
+        string lhsType = lhs->getType(), rhsType = rhs->getType();
 
         if (lhsType != rhsType) {
             cout << "Error: In Greater Than operation, the two variables' type are not the same" << endl;
@@ -464,7 +464,7 @@ public:
             return false;
         }
 
-        string lhsType = lhs->getExpType(), rhsType = rhs->getExpType();
+        string lhsType = lhs->getType(), rhsType = rhs->getType();
 
         if (lhsType != rhsType) {
             cout << "Error: In Less Than operation, the two variables' type are not the same" << endl;
@@ -508,7 +508,7 @@ public:
             return false;
         }
 
-        string lhsType = lhs->getExpType(), rhsType = rhs->getExpType();
+        string lhsType = lhs->getType(), rhsType = rhs->getType();
 
         if (lhsType != rhsType) {
             cout << "Error: In Not Equal operation, the two variables' type are not the same" << endl;
@@ -552,7 +552,7 @@ public:
             return false;
         }
 
-        string lhsType = lhs->getExpType(), rhsType = rhs->getExpType();
+        string lhsType = lhs->getType(), rhsType = rhs->getType();
 
         if (rhsType != "BOOLEAN" || lhsType != "BOOLEAN") {
             cout << "Error: In Or Operation, at least one of them are not boolean type" << endl;
@@ -596,7 +596,7 @@ public:
             return false;
         }
 
-        string lhsType = lhs->getExpType(), rhsType = rhs->getExpType();
+        string lhsType = lhs->getType(), rhsType = rhs->getType();
 
         if (lhsType != rhsType) {
             cout << "Error: In Equal operation, the two variables' type are not the same" << endl;
@@ -638,7 +638,7 @@ public:
             return false;
         }
 
-        string childType = child->getExpType();
+        string childType = child->getType();
 
         if (childType != "BOOLEAN") {
             cout << "Error: In Not operation, the variable type is not boolean" << endl;
@@ -680,7 +680,7 @@ public:
             return false;
         }
 
-        string childType = child->getExpType();
+        string childType = child->getType();
 
         if (childType != "NUMBER") {
             cout << "Error: In Sum operation, the variable type is not number" << endl;
@@ -722,7 +722,7 @@ public:
             return false;
         }
 
-        string childType = child->getExpType();
+        string childType = child->getType();
 
         if (childType != "NUMBER") {
             cout << "Error: In Avg operation, the variable type is not number" << endl;
