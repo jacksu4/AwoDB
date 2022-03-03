@@ -47,6 +47,10 @@ public:
         return "BOOLEAN";
     }
 
+    string getType () {
+        return "BOOLEAN";
+    }
+
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
         return true;
     }
@@ -67,6 +71,10 @@ public:
 	}
 
     string getExpType () {
+        return "NUMBER";
+    }
+
+    string getType () {
         return "NUMBER";
     }
 
@@ -96,6 +104,10 @@ public:
         return "NUMBER";
     }
 
+    string getType () {
+        return "NUMBER";
+    }
+
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
         return true;
     }
@@ -119,6 +131,10 @@ public:
 	}
 
     string getExpType () {
+        return "STRING";
+    }
+
+    string getType () {
         return "STRING";
     }
 
