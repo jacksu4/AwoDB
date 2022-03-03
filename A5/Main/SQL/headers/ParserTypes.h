@@ -254,6 +254,60 @@ public:
 		}
 	}
 
+    void check(MyDB_CatalogPtr catalog) {
+        vector<string> tables;
+        catalog->getStringList("tables", tables);
+        bool correct = false;
+        for (pair<string, string> tableToProcess: tablesToProcess) {
+            for (string table: tables) {
+                if(table == tableToProcess.first) {
+                    correct = true;
+                }
+            }
+            if (!correct) {
+                cout << "Error: Table " + tableToProcess.first + " does not exist!" << endl;
+                return;
+            }
+            correct = false;
+        }
+
+        for (ExprTreePtr valueToSelect: valuesToSelect) {
+            if (!valueToSelect->check(catalog, tablesToProcess)) {
+                return;
+            }
+        }
+
+        for (ExprTreePtr disjunction: allDisjunctions) {
+            if (!disjunction->check(catalog, tablesToProcess)) {
+                return;
+            }
+        }
+
+        for (ExprTreePtr groupingClause: groupingClauses) {
+            if (!groupingClause->check(catalog, tablesToProcess)) {
+                return;
+            }
+        }
+
+        // making sure selected attributes are in grouping clause
+        for (ExprTreePtr valueToSelect: valuesToSelect) {
+            if (valueToSelect->getExpType() == "IDENTIFIER") {
+                correct = false;
+                for (ExprTreePtr groupingClause: groupingClauses) {
+                    if (groupingClause->getExpType() == "IDENTIFIER" && valueToSelect->toString() == groupingClause->toString()) {
+                        correct = true;
+                        break;
+                    }
+                }
+                if (!correct) {
+                    cout << "Error: Value " + valueToSelect->toString() + " being selected is not in grouping clauses" << endl;
+                }
+            }
+        }
+
+        cout << "Valid query!" << endl;
+    }
+
 	#include "FriendDecls.h"
 };
 
@@ -298,6 +352,10 @@ public:
 	void printSFWQuery () {
 		myQuery.print ();
 	}
+
+    void check(MyDB_CatalogPtr catalog) {
+        myQuery.check(catalog);
+    }
 
 	#include "FriendDecls.h"
 };

@@ -163,6 +163,7 @@ int main (int numArgs, char **args) {
 
 						// print it out
 						final->printSFWQuery ();
+                        final->check(myCatalog);
 					}
 
 					// get outta here
