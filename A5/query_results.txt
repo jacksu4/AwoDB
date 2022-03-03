@@ -1,0 +1,17 @@
+1. Valid query!
+2. Error: Value [s_s_suppkey] being selected is not in grouping clauses
+3. Error: In Greater Than operation, the two variables' type are not the same
+4. Error: In Sum operation, the variable type is not number
+5. Valid query!
+6. Error: In Greater Than operation, the two variables' type are not the same
+7. Error: Attribute k_orderkey does not exist in table orders
+8. Error: Table h not found!
+9. Error: In minus operation, one of the variables is not number!
+10. Error: Table customers does not exist!
+11. Valid query!
+12. Valid query!
+13. Error: Attribute l_extendedprice does not exist in table customer
+14. Valid query!
+15. Error: In Greater Than operation, the two variables' type are not the same
+16. Valid query!
+17. Valid query!

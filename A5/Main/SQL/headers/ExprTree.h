@@ -178,7 +178,7 @@ public:
             }
         }
         if (tmpTable.empty()) {
-            cout << "Error: Table " + tableName + "not found!" <<endl;
+            cout << "Error: Table " + tableName + " not found!" <<endl;
             return false;
         }
 
