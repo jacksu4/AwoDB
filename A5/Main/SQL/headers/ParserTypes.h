@@ -262,6 +262,7 @@ public:
             for (string table: tables) {
                 if(table == tableToProcess.first) {
                     correct = true;
+					break;
                 }
             }
             if (!correct) {
@@ -269,24 +270,6 @@ public:
                 return;
             }
             correct = false;
-        }
-
-        for (ExprTreePtr valueToSelect: valuesToSelect) {
-            if (!valueToSelect->check(catalog, tablesToProcess)) {
-                return;
-            }
-        }
-
-        for (ExprTreePtr disjunction: allDisjunctions) {
-            if (!disjunction->check(catalog, tablesToProcess)) {
-                return;
-            }
-        }
-
-        for (ExprTreePtr groupingClause: groupingClauses) {
-            if (!groupingClause->check(catalog, tablesToProcess)) {
-                return;
-            }
         }
 
         // making sure selected attributes are in grouping clause
@@ -301,11 +284,31 @@ public:
                 }
                 if (!correct) {
                     cout << "Error: Value " + valueToSelect->toString() + " being selected is not in grouping clauses" << endl;
+					return;
                 }
             }
         }
 
-        cout << "Valid query!" << endl;
+        for (ExprTreePtr valueToSelect: valuesToSelect) {
+            if (!valueToSelect->check(catalog, tablesToProcess)) {
+                return;
+            }
+        }
+
+
+        for (auto disjunction: allDisjunctions) {
+            if (!disjunction->check(catalog, tablesToProcess)) {
+                return;
+            }
+        }
+
+        for (ExprTreePtr groupingClause: groupingClauses) {
+            if (!groupingClause->check(catalog, tablesToProcess)) {
+                return;
+            }
+        }
+
+        cout << "Valid query!" << endl; 
     }
 
 	#include "FriendDecls.h"

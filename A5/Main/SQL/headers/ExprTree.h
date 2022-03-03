@@ -133,7 +133,7 @@ class Identifier : public ExprTree {
 private:
 	string tableName;
 	string attName;
-    string expType;
+    string expType = "IDENTIFIER";
 public:
 
 	Identifier (char *tableNameIn, char *attNameIn) {
@@ -157,7 +157,7 @@ public:
             }
         }
         if (tmpTable.empty()) {
-            cout << "Error: Table " + tableName + "not found!" <<endl;
+            cout << "Error: Table " + tableName + " not found!" <<endl;
             return false;
         }
 
@@ -167,9 +167,9 @@ public:
             return false;
         }
 
-        if (tmpAttr.compare("int") == 0 || tmpAttr.compare("double") == 0) {
+        if (tmpAttr == "int" || tmpAttr == "double") { // may need change?
             expType = "NUMBER";
-        } else if (tmpAttr.compare("string") == 0) {
+        } else if (tmpAttr == "string") {
             expType = "STRING";
         } else {
             expType = "BOOLEAN";
