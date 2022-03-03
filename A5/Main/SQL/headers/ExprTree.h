@@ -21,6 +21,7 @@ public:
 	virtual string toString () = 0;
 	virtual ~ExprTree () {}
     virtual string getExpType () = 0;
+    virtual string getType () = 0;
     virtual bool check (MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) = 0;
 };
 
@@ -46,6 +47,10 @@ public:
         return "BOOLEAN";
     }
 
+    string getType () {
+        return "BOOLEAN";
+    }
+
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
         return true;
     }
@@ -66,6 +71,10 @@ public:
 	}
 
     string getExpType () {
+        return "NUMBER";
+    }
+
+    string getType () {
         return "NUMBER";
     }
 
@@ -95,6 +104,10 @@ public:
         return "NUMBER";
     }
 
+    string getType () {
+        return "NUMBER";
+    }
+
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
         return true;
     }
@@ -118,6 +131,10 @@ public:
 	}
 
     string getExpType () {
+        return "STRING";
+    }
+
+    string getType () {
         return "STRING";
     }
 
@@ -146,11 +163,15 @@ public:
 	}
 
     string getExpType () {
+        return "IDENTIFIER";
+    }
+
+    string getType () {
         return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
-        string tmpTable = "", tmpAttr = "";
+        string tmpTable, tmpAttr;
         for(pair<string, string> table: tables) {
             if (table.second == tableName) {
                 tmpTable = table.first;
@@ -186,6 +207,7 @@ private:
 
 	ExprTreePtr lhs;
 	ExprTreePtr rhs;
+    string expType = "NUMBER";
 	
 public:
 
@@ -199,7 +221,11 @@ public:
 	}
 
     string getExpType () {
-        return "NUMBER";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -241,6 +267,10 @@ public:
 	}
 
     string getExpType () {
+        return "STRING";
+    }
+
+    string getType () {
         return expType;
     }
 
@@ -276,6 +306,7 @@ private:
 
 	ExprTreePtr lhs;
 	ExprTreePtr rhs;
+    string expType = "NUMBER";
 	
 public:
 
@@ -289,7 +320,11 @@ public:
 	}
 
     string getExpType () {
-        return "NUMBER";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -315,6 +350,7 @@ private:
 
 	ExprTreePtr lhs;
 	ExprTreePtr rhs;
+    string expType = "NUMBER";
 	
 public:
 
@@ -328,7 +364,11 @@ public:
 	}
 
     string getExpType () {
-        return "NUMBER";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -354,6 +394,7 @@ private:
 
 	ExprTreePtr lhs;
 	ExprTreePtr rhs;
+    string expType = "BOOLEAN";
 	
 public:
 
@@ -367,7 +408,11 @@ public:
 	}
 
     string getExpType () {
-        return "BOOLEAN";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -393,6 +438,7 @@ private:
 
 	ExprTreePtr lhs;
 	ExprTreePtr rhs;
+    string expType = "BOOLEAN";
 	
 public:
 
@@ -406,7 +452,11 @@ public:
 	}
 
     string getExpType () {
-        return "BOOLEAN";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -432,6 +482,7 @@ private:
 
 	ExprTreePtr lhs;
 	ExprTreePtr rhs;
+    string expType = "BOOLEAN";
 	
 public:
 
@@ -445,7 +496,11 @@ public:
 	}
 
     string getExpType () {
-        return "BOOLEAN";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -471,6 +526,7 @@ private:
 
 	ExprTreePtr lhs;
 	ExprTreePtr rhs;
+    string expType = "BOOLEAN";
 	
 public:
 
@@ -484,7 +540,11 @@ public:
 	}
 
     string getExpType () {
-        return "BOOLEAN";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -510,6 +570,7 @@ private:
 
 	ExprTreePtr lhs;
 	ExprTreePtr rhs;
+    string expType = "BOOLEAN";
 	
 public:
 
@@ -523,7 +584,11 @@ public:
 	}
 
     string getExpType () {
-        return "BOOLEAN";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -548,6 +613,7 @@ class NotOp : public ExprTree {
 private:
 
 	ExprTreePtr child;
+    string expType = "BOOLEAN";
 	
 public:
 
@@ -560,7 +626,11 @@ public:
 	}
 
     string getExpType () {
-        return "BOOLEAN";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -585,6 +655,7 @@ class SumOp : public ExprTree {
 private:
 
 	ExprTreePtr child;
+    string expType = "NUMBER";
 	
 public:
 
@@ -597,7 +668,11 @@ public:
 	}
 
     string getExpType () {
-        return "NUMBER";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -622,6 +697,7 @@ class AvgOp : public ExprTree {
 private:
 
 	ExprTreePtr child;
+    string expType = "NUMBER";
 	
 public:
 
@@ -634,7 +710,11 @@ public:
 	}
 
     string getExpType () {
-        return "NUMBER";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
