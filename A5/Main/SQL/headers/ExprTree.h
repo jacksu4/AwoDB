@@ -21,6 +21,7 @@ public:
 	virtual string toString () = 0;
 	virtual ~ExprTree () {}
     virtual string getExpType () = 0;
+    virtual string getType () = 0;
     virtual bool check (MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) = 0;
 };
 
@@ -146,6 +147,10 @@ public:
 	}
 
     string getExpType () {
+        return "IDENTIFIER";
+    }
+
+    string getType () {
         return expType;
     }
 
@@ -203,6 +208,10 @@ public:
         return expType;
     }
 
+    string getType () {
+        return expType;
+    }
+
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
         if (!lhs->check(catalog, tables) || !rhs->check(catalog, tables)) {
             return false;
@@ -242,6 +251,10 @@ public:
 	}
 
     string getExpType () {
+        return "STRING";
+    }
+
+    string getType () {
         return expType;
     }
 
@@ -294,6 +307,10 @@ public:
         return expType;
     }
 
+    string getType () {
+        return expType;
+    }
+
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
         if (!lhs->check(catalog, tables) || !rhs->check(catalog, tables)) {
             return false;
@@ -331,6 +348,10 @@ public:
 	}
 
     string getExpType () {
+        return expType;
+    }
+
+    string getType () {
         return expType;
     }
 
@@ -374,6 +395,10 @@ public:
         return expType;
     }
 
+    string getType () {
+        return expType;
+    }
+
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
         if (!lhs->check(catalog, tables) || !rhs->check(catalog, tables)) {
             return false;
@@ -411,6 +436,10 @@ public:
 	}
 
     string getExpType () {
+        return expType;
+    }
+
+    string getType () {
         return expType;
     }
 
@@ -454,6 +483,10 @@ public:
         return expType;
     }
 
+    string getType () {
+        return expType;
+    }
+
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
         if (!lhs->check(catalog, tables) || !rhs->check(catalog, tables)) {
             return false;
@@ -491,6 +524,10 @@ public:
 	}
 
     string getExpType () {
+        return expType;
+    }
+
+    string getType () {
         return expType;
     }
 
@@ -534,6 +571,10 @@ public:
         return expType;
     }
 
+    string getType () {
+        return expType;
+    }
+
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
         if (!lhs->check(catalog, tables) || !rhs->check(catalog, tables)) {
             return false;
@@ -572,6 +613,10 @@ public:
         return expType;
     }
 
+    string getType () {
+        return expType;
+    }
+
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
         if (!child->check(catalog, tables)) {
             return false;
@@ -607,7 +652,11 @@ public:
 	}
 
     string getExpType () {
-        return "NUMBER";
+        return expType;
+    }
+
+    string getType () {
+        return expType;
     }
 
     bool check(MyDB_CatalogPtr catalog, vector<pair<string, string>> tables) override {
@@ -645,6 +694,10 @@ public:
 	}
 
     string getExpType () {
+        return expType;
+    }
+
+    string getType () {
         return expType;
     }
 
