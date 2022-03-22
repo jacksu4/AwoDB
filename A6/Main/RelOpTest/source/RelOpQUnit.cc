@@ -96,174 +96,174 @@ int main () {
 			cout << temp << "\n";
 		}
 
-		// now, we count the total number of records 
-		vector <pair <MyDB_AggType, string>> aggsToCompute;
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
+	// 	// now, we count the total number of records 
+	// 	vector <pair <MyDB_AggType, string>> aggsToCompute;
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
 
-		vector <string> groupings;
-		MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
-		mySchemaOutAgain->appendAtt (make_pair ("mycnt", make_shared <MyDB_IntAttType> ()));
-		MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
-		MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
+	// 	vector <string> groupings;
+	// 	MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
+	// 	mySchemaOutAgain->appendAtt (make_pair ("mycnt", make_shared <MyDB_IntAttType> ()));
+	// 	MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
+	// 	MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
 
-		Aggregate myOpAgain (supplierTableOut, aggTableOut, aggsToCompute, groupings, "bool[true]");
-		cout << "running aggregate\n";
-		myOpAgain.run ();
+	// 	Aggregate myOpAgain (supplierTableOut, aggTableOut, aggsToCompute, groupings, "bool[true]");
+	// 	cout << "running aggregate\n";
+	// 	myOpAgain.run ();
 		
-                temp = aggTableOut->getEmptyRecord ();
-                myIter = aggTableOut->getIteratorAlt ();
+    //             temp = aggTableOut->getEmptyRecord ();
+    //             myIter = aggTableOut->getIteratorAlt ();
 
-		cout << "Now we count the records.";
-		cout << "\nThe output should be 413:\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
-			cout << temp << "\n";
-		}
+	// 	cout << "Now we count the records.";
+	// 	cout << "\nThe output should be 413:\n";
+    //             while (myIter->advance ()) {
+    //                     myIter->getCurrent (temp);
+	// 		cout << temp << "\n";
+	// 	}
 	}
 
-	{
-		// get the output schema and table
-		MyDB_SchemaPtr mySchemaOut = make_shared <MyDB_Schema> ();
-		mySchemaOut->appendAtt (make_pair ("l_name", make_shared <MyDB_StringAttType> ()));
-		mySchemaOut->appendAtt (make_pair ("l_nationkey", make_shared <MyDB_StringAttType> ()));
-		mySchemaOut->appendAtt (make_pair ("combined_stuff", make_shared <MyDB_StringAttType> ()));
-		MyDB_TablePtr myTableOut = make_shared <MyDB_Table> ("supplierOut", "supplierOut.bin", mySchemaOut);
-		MyDB_TableReaderWriterPtr supplierTableOut = make_shared <MyDB_TableReaderWriter> (myTableOut, myMgr);
+	// {
+	// 	// get the output schema and table
+	// 	MyDB_SchemaPtr mySchemaOut = make_shared <MyDB_Schema> ();
+	// 	mySchemaOut->appendAtt (make_pair ("l_name", make_shared <MyDB_StringAttType> ()));
+	// 	mySchemaOut->appendAtt (make_pair ("l_nationkey", make_shared <MyDB_StringAttType> ()));
+	// 	mySchemaOut->appendAtt (make_pair ("combined_stuff", make_shared <MyDB_StringAttType> ()));
+	// 	MyDB_TablePtr myTableOut = make_shared <MyDB_Table> ("supplierOut", "supplierOut.bin", mySchemaOut);
+	// 	MyDB_TableReaderWriterPtr supplierTableOut = make_shared <MyDB_TableReaderWriter> (myTableOut, myMgr);
 
-		vector <string> projections;
-		projections.push_back ("[l_name]");
-		projections.push_back ("[l_nationkey]");
-		projections.push_back ("+ (+ (+ ([l_phone], string[ ]), + ([l_acctbal], string[ ])), [l_comment])");
+	// 	vector <string> projections;
+	// 	projections.push_back ("[l_name]");
+	// 	projections.push_back ("[l_nationkey]");
+	// 	projections.push_back ("+ (+ (+ ([l_phone], string[ ]), + ([l_acctbal], string[ ])), [l_comment])");
 
-		RegularSelection myOp (supplierTableL, supplierTableOut, "&& (== ([l_nationkey], int[1]), > ([l_name], string [Supplier#000009378]))", projections);
-		myOp.run ();
+	// 	RegularSelection myOp (supplierTableL, supplierTableOut, "&& (== ([l_nationkey], int[1]), > ([l_name], string [Supplier#000009378]))", projections);
+	// 	myOp.run ();
 
-		cout << "\nFirst result should be:\n";
-		cout << "Supplier#000009428|1|11-896-966-5146 5429.370000 furiously regular pinto beans caj|\n\n";
-                MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = supplierTableOut->getIteratorAlt ();
+	// 	cout << "\nFirst result should be:\n";
+	// 	cout << "Supplier#000009428|1|11-896-966-5146 5429.370000 furiously regular pinto beans caj|\n\n";
+    //             MyDB_RecordPtr temp = supplierTableOut->getEmptyRecord ();
+    //             MyDB_RecordIteratorAltPtr myIter = supplierTableOut->getIteratorAlt ();
 
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
-			cout << temp << "\n";
-		}
+    //             while (myIter->advance ()) {
+    //                     myIter->getCurrent (temp);
+	// 		cout << temp << "\n";
+	// 	}
 
-		// now, we count the total number of records 
-		vector <pair <MyDB_AggType, string>> aggsToCompute;
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
+	// 	// now, we count the total number of records 
+	// 	vector <pair <MyDB_AggType, string>> aggsToCompute;
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
 
-		vector <string> groupings;
-		MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
-		mySchemaOutAgain->appendAtt (make_pair ("mycnt", make_shared <MyDB_IntAttType> ()));
-		MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
-		MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
+	// 	vector <string> groupings;
+	// 	MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
+	// 	mySchemaOutAgain->appendAtt (make_pair ("mycnt", make_shared <MyDB_IntAttType> ()));
+	// 	MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
+	// 	MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
 
-		Aggregate myOpAgain (supplierTableOut, aggTableOut, aggsToCompute, groupings, "bool[true]");
-		cout << "running aggregate\n";
-		myOpAgain.run ();
+	// 	Aggregate myOpAgain (supplierTableOut, aggTableOut, aggsToCompute, groupings, "bool[true]");
+	// 	cout << "running aggregate\n";
+	// 	myOpAgain.run ();
 		
-                temp = aggTableOut->getEmptyRecord ();
-                myIter = aggTableOut->getIteratorAlt ();
+    //             temp = aggTableOut->getEmptyRecord ();
+    //             myIter = aggTableOut->getIteratorAlt ();
 
-		cout << "Now we count the records.";
-		cout << "\nThe output should be 29:\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
-			cout << temp << "\n";
-		}
-	}
+	// 	cout << "Now we count the records.";
+	// 	cout << "\nThe output should be 29:\n";
+    //             while (myIter->advance ()) {
+    //                     myIter->getCurrent (temp);
+	// 		cout << temp << "\n";
+	// 	}
+	// }
 	
-	{
+	// {
 		
-		// get the output schema and table
-		MyDB_SchemaPtr mySchemaOut = make_shared <MyDB_Schema> ();
-		mySchemaOut->appendAtt (make_pair ("l_name", make_shared <MyDB_StringAttType> ()));
-		mySchemaOut->appendAtt (make_pair ("combined_comment", make_shared <MyDB_StringAttType> ()));
-		MyDB_TablePtr myTableOut = make_shared <MyDB_Table> ("supplierOut", "supplierOut.bin", mySchemaOut);
-		MyDB_TableReaderWriterPtr supplierTableOut = make_shared <MyDB_TableReaderWriter> (myTableOut, myMgr);
+	// 	// get the output schema and table
+	// 	MyDB_SchemaPtr mySchemaOut = make_shared <MyDB_Schema> ();
+	// 	mySchemaOut->appendAtt (make_pair ("l_name", make_shared <MyDB_StringAttType> ()));
+	// 	mySchemaOut->appendAtt (make_pair ("combined_comment", make_shared <MyDB_StringAttType> ()));
+	// 	MyDB_TablePtr myTableOut = make_shared <MyDB_Table> ("supplierOut", "supplierOut.bin", mySchemaOut);
+	// 	MyDB_TableReaderWriterPtr supplierTableOut = make_shared <MyDB_TableReaderWriter> (myTableOut, myMgr);
 
-		// This basically runs:
-		//
-		// SELECT supplierLeft.l_name, supplierLeft.l_comment + " " + supplierRight.r_comment
-		// FROM supplierLeft, supplierRight
-		// WHERE (supplierLeft.l_nationkey = 4 OR
-		//        supplierLeft.l_nationkey = 3) AND
-		//       (supplierRight.r_nationkey = 3) AND
-		//       (supplierLeft.l_suppkey = supplierRight.r_suppkey) AND
-		//       (supplierLeft.l_name = supplierRight.r_name)
-		// 
-		// It does this by hashing the smaller table (supplierLeft) on 
-		// supplierLeft.l_suppkey and supplierLeft.l_name.  It then scans
-		// supplierRight, probing the hash table for matches
+	// 	// This basically runs:
+	// 	//
+	// 	// SELECT supplierLeft.l_name, supplierLeft.l_comment + " " + supplierRight.r_comment
+	// 	// FROM supplierLeft, supplierRight
+	// 	// WHERE (supplierLeft.l_nationkey = 4 OR
+	// 	//        supplierLeft.l_nationkey = 3) AND
+	// 	//       (supplierRight.r_nationkey = 3) AND
+	// 	//       (supplierLeft.l_suppkey = supplierRight.r_suppkey) AND
+	// 	//       (supplierLeft.l_name = supplierRight.r_name)
+	// 	// 
+	// 	// It does this by hashing the smaller table (supplierLeft) on 
+	// 	// supplierLeft.l_suppkey and supplierLeft.l_name.  It then scans
+	// 	// supplierRight, probing the hash table for matches
 
-		vector <pair <string, string>> hashAtts;
-		hashAtts.push_back (make_pair (string ("[l_suppkey]"), string ("[r_suppkey]")));
-		hashAtts.push_back (make_pair (string ("[l_name]"), string ("[r_name]")));
+	// 	vector <pair <string, string>> hashAtts;
+	// 	hashAtts.push_back (make_pair (string ("[l_suppkey]"), string ("[r_suppkey]")));
+	// 	hashAtts.push_back (make_pair (string ("[l_name]"), string ("[r_name]")));
 
-		vector <string> projections;
-		projections.push_back ("[l_name]");
-		projections.push_back ("+ (+ ([l_comment], string[ ]), [r_comment])");
+	// 	vector <string> projections;
+	// 	projections.push_back ("[l_name]");
+	// 	projections.push_back ("+ (+ ([l_comment], string[ ]), [r_comment])");
 
-		cout << "Do you want to run a:\n";
-		cout << "\t1. Sort merge join.\n";
-		cout << "\t2. Scan join.\n";
-		cout << "Enter 1 or 2:\n";
-		int res;
-		cin >> res;
+	// 	cout << "Do you want to run a:\n";
+	// 	cout << "\t1. Sort merge join.\n";
+	// 	cout << "\t2. Scan join.\n";
+	// 	cout << "Enter 1 or 2:\n";
+	// 	int res;
+	// 	cin >> res;
 
-		if (res == 2) {
-			ScanJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
-				"&& ( == ([l_suppkey], [r_suppkey]), == ([l_name], [r_name]))", projections, hashAtts,
-				"|| ( == ([l_nationkey], int[3]), == ([l_nationkey], int[4]))",
-				"== ([r_nationkey], int[3])");
-			cout << "running join\n";
-			myOp.run ();
-		} else if (res == 1) {
-			SortMergeJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
-				"&& ( == ([l_suppkey], [r_suppkey]), == ([l_name], [r_name]))", projections, 
-				make_pair (string ("[l_suppkey]"), string ("[r_suppkey]")),
-				"|| ( == ([l_nationkey], int[3]), == ([l_nationkey], int[4]))",
-				"== ([r_nationkey], int[3])");
-			cout << "running join\n";
-			myOp.run ();
-		} else {
-			cout << "I said 1 or 2!!!\n";
-			return 3;
-		}
+	// 	if (res == 2) {
+	// 		ScanJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
+	// 			"&& ( == ([l_suppkey], [r_suppkey]), == ([l_name], [r_name]))", projections, hashAtts,
+	// 			"|| ( == ([l_nationkey], int[3]), == ([l_nationkey], int[4]))",
+	// 			"== ([r_nationkey], int[3])");
+	// 		cout << "running join\n";
+	// 		myOp.run ();
+	// 	} else if (res == 1) {
+	// 		SortMergeJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
+	// 			"&& ( == ([l_suppkey], [r_suppkey]), == ([l_name], [r_name]))", projections, 
+	// 			make_pair (string ("[l_suppkey]"), string ("[r_suppkey]")),
+	// 			"|| ( == ([l_nationkey], int[3]), == ([l_nationkey], int[4]))",
+	// 			"== ([r_nationkey], int[3])");
+	// 		cout << "running join\n";
+	// 		myOp.run ();
+	// 	} else {
+	// 		cout << "I said 1 or 2!!!\n";
+	// 		return 3;
+	// 	}
 
-		// now, we count the total number of records with each nation name
-		vector <pair <MyDB_AggType, string>> aggsToCompute;
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
+	// 	// now, we count the total number of records with each nation name
+	// 	vector <pair <MyDB_AggType, string>> aggsToCompute;
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
 
-		vector <string> groupings;
-		groupings.push_back ("[l_name]");
+	// 	vector <string> groupings;
+	// 	groupings.push_back ("[l_name]");
 
-		MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
-		mySchemaOutAgain->appendAtt (make_pair ("l_name", make_shared <MyDB_StringAttType> ()));
-		mySchemaOutAgain->appendAtt (make_pair ("mycnt", make_shared <MyDB_IntAttType> ()));
-		MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
-		MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
+	// 	MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
+	// 	mySchemaOutAgain->appendAtt (make_pair ("l_name", make_shared <MyDB_StringAttType> ()));
+	// 	mySchemaOutAgain->appendAtt (make_pair ("mycnt", make_shared <MyDB_IntAttType> ()));
+	// 	MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
+	// 	MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
 
-		Aggregate myOpAgain (supplierTableOut, aggTableOut, aggsToCompute, groupings, 
-			"&& ( > ([l_name], string[Supplier#000002243]), < ([l_name], string[Supplier#000002303]))");
-		cout << "running aggregate\n";
-		myOpAgain.run ();
+	// 	Aggregate myOpAgain (supplierTableOut, aggTableOut, aggsToCompute, groupings, 
+	// 		"&& ( > ([l_name], string[Supplier#000002243]), < ([l_name], string[Supplier#000002303]))");
+	// 	cout << "running aggregate\n";
+	// 	myOpAgain.run ();
 		
-                MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
+    //             MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
+    //             MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
 
-		cout << "\nThe output should be, in some order:\n";
-		cout << "Supplier#000002245|32|\n";
-		cout << "Supplier#000002264|32|\n";
-		cout << "Supplier#000002265|32|\n";
-		cout << "Supplier#000002272|32|\n";
-		cout << "Supplier#000002282|32|\n";
-		cout << "\nHere goes:\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
-			cout << temp << "\n";
-                }
-	}
+	// 	cout << "\nThe output should be, in some order:\n";
+	// 	cout << "Supplier#000002245|32|\n";
+	// 	cout << "Supplier#000002264|32|\n";
+	// 	cout << "Supplier#000002265|32|\n";
+	// 	cout << "Supplier#000002272|32|\n";
+	// 	cout << "Supplier#000002282|32|\n";
+	// 	cout << "\nHere goes:\n";
+    //             while (myIter->advance ()) {
+    //                     myIter->getCurrent (temp);
+	// 		cout << temp << "\n";
+    //             }
+	// }
 
 	MyDB_BPlusTreeReaderWriterPtr supplierTableR = make_shared <MyDB_BPlusTreeReaderWriter> ("r_address", myTableRight, myMgr);
 	MyDB_TablePtr myTableRightNoBPlus = make_shared <MyDB_Table> ("supplierRightNoBPlus", "supplierRightNoBPlus.bin", mySchemaR);
@@ -314,278 +314,278 @@ int main () {
 
 	}
 
-	{
-		vector <pair <MyDB_AggType, string>> aggsToCompute;
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: avg, "* ([r_suppkey], double[1.0])"));
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: avg, "[r_acctbal]"));
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
+	// {
+	// 	vector <pair <MyDB_AggType, string>> aggsToCompute;
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: avg, "* ([r_suppkey], double[1.0])"));
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: avg, "[r_acctbal]"));
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
 
-		vector <string> groupings;
-		groupings.push_back ("[r_suppkey]");
-		groupings.push_back ("[r_name]");
+	// 	vector <string> groupings;
+	// 	groupings.push_back ("[r_suppkey]");
+	// 	groupings.push_back ("[r_name]");
 
-		MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
-		mySchemaOutAgain->appendAtt (make_pair ("r_suppkey", make_shared <MyDB_IntAttType> ()));
-		mySchemaOutAgain->appendAtt (make_pair ("r_name", make_shared <MyDB_StringAttType> ()));
-		mySchemaOutAgain->appendAtt (make_pair ("r_suppkey_avg", make_shared <MyDB_DoubleAttType> ()));
-		mySchemaOutAgain->appendAtt (make_pair ("r_acctbal_avg", make_shared <MyDB_DoubleAttType> ()));
-		mySchemaOutAgain->appendAtt (make_pair ("r_cnt", make_shared <MyDB_IntAttType> ()));
-		MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
-		MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
+	// 	MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
+	// 	mySchemaOutAgain->appendAtt (make_pair ("r_suppkey", make_shared <MyDB_IntAttType> ()));
+	// 	mySchemaOutAgain->appendAtt (make_pair ("r_name", make_shared <MyDB_StringAttType> ()));
+	// 	mySchemaOutAgain->appendAtt (make_pair ("r_suppkey_avg", make_shared <MyDB_DoubleAttType> ()));
+	// 	mySchemaOutAgain->appendAtt (make_pair ("r_acctbal_avg", make_shared <MyDB_DoubleAttType> ()));
+	// 	mySchemaOutAgain->appendAtt (make_pair ("r_cnt", make_shared <MyDB_IntAttType> ()));
+	// 	MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
+	// 	MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
 
-		Aggregate myOpAgain (supplierTableR, aggTableOut, aggsToCompute, groupings, "< ([r_suppkey], int[10])");
+	// 	Aggregate myOpAgain (supplierTableR, aggTableOut, aggsToCompute, groupings, "< ([r_suppkey], int[10])");
 
-		// This basically runs:
-		//
-		// SELECT r_suppkey, r_name, AVG (r_suppkey * 1.0), AVG (r_acctbal), COUNT (0)
-		// FROM supplierLeft
-		// WHERE r_suppkey < 10
-		// GROUP BY r_suppkey, r_name
-		//
-		cout << "running agg\n";
-		myOpAgain.run ();
+	// 	// This basically runs:
+	// 	//
+	// 	// SELECT r_suppkey, r_name, AVG (r_suppkey * 1.0), AVG (r_acctbal), COUNT (0)
+	// 	// FROM supplierLeft
+	// 	// WHERE r_suppkey < 10
+	// 	// GROUP BY r_suppkey, r_name
+	// 	//
+	// 	cout << "running agg\n";
+	// 	myOpAgain.run ();
 
-                MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
+    //             MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
+    //             MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
 
-		cout << "\nThere should be nine groups, each with 32 records.\n";
-		cout << "One of them should be '5|Supplier#000000005|5.000000|-283.840000|32|'.\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
-			cout << temp << "\n";
-		}
-	}
+	// 	cout << "\nThere should be nine groups, each with 32 records.\n";
+	// 	cout << "One of them should be '5|Supplier#000000005|5.000000|-283.840000|32|'.\n";
+    //             while (myIter->advance ()) {
+    //                     myIter->getCurrent (temp);
+	// 		cout << temp << "\n";
+	// 	}
+	// }
 
-	{
-		vector <pair <MyDB_AggType, string>> aggsToCompute;
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: avg, "* ([r_suppkey], double[1.0])"));
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: avg, "[r_acctbal]"));
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
+	// {
+	// 	vector <pair <MyDB_AggType, string>> aggsToCompute;
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: avg, "* ([r_suppkey], double[1.0])"));
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: avg, "[r_acctbal]"));
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
 
-		vector <string> groupings;
-		groupings.push_back ("/ ([r_suppkey], int[100])");
+	// 	vector <string> groupings;
+	// 	groupings.push_back ("/ ([r_suppkey], int[100])");
 
-		MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
-		mySchemaOutAgain->appendAtt (make_pair ("r_suppkey", make_shared <MyDB_IntAttType> ()));
-		mySchemaOutAgain->appendAtt (make_pair ("r_suppkey_avg", make_shared <MyDB_DoubleAttType> ()));
-		mySchemaOutAgain->appendAtt (make_pair ("r_acctbal_avg", make_shared <MyDB_DoubleAttType> ()));
-		mySchemaOutAgain->appendAtt (make_pair ("r_cnt", make_shared <MyDB_IntAttType> ()));
-		MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
-		MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
+	// 	MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
+	// 	mySchemaOutAgain->appendAtt (make_pair ("r_suppkey", make_shared <MyDB_IntAttType> ()));
+	// 	mySchemaOutAgain->appendAtt (make_pair ("r_suppkey_avg", make_shared <MyDB_DoubleAttType> ()));
+	// 	mySchemaOutAgain->appendAtt (make_pair ("r_acctbal_avg", make_shared <MyDB_DoubleAttType> ()));
+	// 	mySchemaOutAgain->appendAtt (make_pair ("r_cnt", make_shared <MyDB_IntAttType> ()));
+	// 	MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
+	// 	MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
 
-		Aggregate myOpAgain (supplierTableR, aggTableOut, aggsToCompute, groupings, "bool [true]");
+	// 	Aggregate myOpAgain (supplierTableR, aggTableOut, aggsToCompute, groupings, "bool [true]");
 
-		// This basically runs:
-		//
-		// SELECT r_suppkey / 100, AVG (r_suppkey * 1.0), AVG (r_acctbal), COUNT (0)
-		// FROM supplierLeft
-		// GROUP BY r_suppkey / 100
-		//
-		cout << "running agg\n";
-		myOpAgain.run ();
-                MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
+	// 	// This basically runs:
+	// 	//
+	// 	// SELECT r_suppkey / 100, AVG (r_suppkey * 1.0), AVG (r_acctbal), COUNT (0)
+	// 	// FROM supplierLeft
+	// 	// GROUP BY r_suppkey / 100
+	// 	//
+	// 	cout << "running agg\n";
+	// 	myOpAgain.run ();
+    //             MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
+    //             MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
 
-		cout << "\nThere should be 101 groups, each with 3200 records, except for the first and last,\n";
-		cout << "These should be '0|50.000000|4017.558586|3168|' and\n";
-		cout << "'100|10000.000000|8968.420000|32|' respectively.\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
-			cout << temp << "\n";
-		}
+	// 	cout << "\nThere should be 101 groups, each with 3200 records, except for the first and last,\n";
+	// 	cout << "These should be '0|50.000000|4017.558586|3168|' and\n";
+	// 	cout << "'100|10000.000000|8968.420000|32|' respectively.\n";
+    //             while (myIter->advance ()) {
+    //                     myIter->getCurrent (temp);
+	// 		cout << temp << "\n";
+	// 	}
 
-		aggsToCompute.clear ();
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: sum, "[r_cnt]"));
+	// 	aggsToCompute.clear ();
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: sum, "[r_cnt]"));
 
-		groupings.clear ();
+	// 	groupings.clear ();
 		
-		MyDB_SchemaPtr mySchemaOutAgainAgain = make_shared <MyDB_Schema> ();
-		mySchemaOutAgainAgain->appendAtt (make_pair ("final_cnt", make_shared <MyDB_IntAttType> ()));
-		MyDB_TablePtr aggTableFinal = make_shared <MyDB_Table> ("aggOutOut", "aggOutOut.bin", mySchemaOutAgainAgain);
-		MyDB_TableReaderWriterPtr aggTableOutFinal = make_shared <MyDB_TableReaderWriter> (aggTableFinal, myMgr);
+	// 	MyDB_SchemaPtr mySchemaOutAgainAgain = make_shared <MyDB_Schema> ();
+	// 	mySchemaOutAgainAgain->appendAtt (make_pair ("final_cnt", make_shared <MyDB_IntAttType> ()));
+	// 	MyDB_TablePtr aggTableFinal = make_shared <MyDB_Table> ("aggOutOut", "aggOutOut.bin", mySchemaOutAgainAgain);
+	// 	MyDB_TableReaderWriterPtr aggTableOutFinal = make_shared <MyDB_TableReaderWriter> (aggTableFinal, myMgr);
 
-		Aggregate myOpOnceAgain (aggTableOut, aggTableOutFinal, aggsToCompute, groupings, "bool [true]");
-		//
-		// Assuming that the output of the last query has the schema (r_suppkey, r_suppkey_avg, r_acctbal_avg, r_cnt)
-		//
-		// This basically runs:
-		//
-		// SELECT SUM (r_cnt)
-		// FROM lastResult
-		//
-		myOpOnceAgain.run ();
+	// 	Aggregate myOpOnceAgain (aggTableOut, aggTableOutFinal, aggsToCompute, groupings, "bool [true]");
+	// 	//
+	// 	// Assuming that the output of the last query has the schema (r_suppkey, r_suppkey_avg, r_acctbal_avg, r_cnt)
+	// 	//
+	// 	// This basically runs:
+	// 	//
+	// 	// SELECT SUM (r_cnt)
+	// 	// FROM lastResult
+	// 	//
+	// 	myOpOnceAgain.run ();
 
-		cout << "\nThere should be one result: 320000.\n";
-                temp = aggTableOutFinal->getEmptyRecord ();
-                myIter = aggTableOutFinal->getIteratorAlt ();
+	// 	cout << "\nThere should be one result: 320000.\n";
+    //             temp = aggTableOutFinal->getEmptyRecord ();
+    //             myIter = aggTableOutFinal->getIteratorAlt ();
 
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
-			cout << temp << "\n";
-		}
-	}
+    //             while (myIter->advance ()) {
+    //                     myIter->getCurrent (temp);
+	// 		cout << temp << "\n";
+	// 	}
+	// }
 
-	{
-		// get the output schema and table
-		MyDB_SchemaPtr mySchemaOut = make_shared <MyDB_Schema> ();
-		mySchemaOut->appendAtt (make_pair ("name", make_shared <MyDB_StringAttType> ()));
-		mySchemaOut->appendAtt (make_pair ("acctbal", make_shared <MyDB_DoubleAttType> ()));
-		mySchemaOut->appendAtt (make_pair ("nation", make_shared <MyDB_IntAttType> ()));
-		MyDB_TablePtr myTableOut = make_shared <MyDB_Table> ("supplierOut", "supplierOut.bin", mySchemaOut);
-		MyDB_TableReaderWriterPtr supplierTableOut = make_shared <MyDB_TableReaderWriter> (myTableOut, myMgr);
+	// {
+	// 	// get the output schema and table
+	// 	MyDB_SchemaPtr mySchemaOut = make_shared <MyDB_Schema> ();
+	// 	mySchemaOut->appendAtt (make_pair ("name", make_shared <MyDB_StringAttType> ()));
+	// 	mySchemaOut->appendAtt (make_pair ("acctbal", make_shared <MyDB_DoubleAttType> ()));
+	// 	mySchemaOut->appendAtt (make_pair ("nation", make_shared <MyDB_IntAttType> ()));
+	// 	MyDB_TablePtr myTableOut = make_shared <MyDB_Table> ("supplierOut", "supplierOut.bin", mySchemaOut);
+	// 	MyDB_TableReaderWriterPtr supplierTableOut = make_shared <MyDB_TableReaderWriter> (myTableOut, myMgr);
 
-		// This basically runs:
-		//
-		// SELECT supplierLeft.l_name + " " supplierRight.r_name, supplierRight.r_acctbal * supplierLeft.l_acctbal
-		// FROM supplierLeft, supplierRight
-		// WHERE (supplierLeft.l_nationkey = supplierRight.r_nationkey) AND
-		//       (supplierLeft.l_nationkey > 6)
-		// 
-		// It does this by hashing the smaller table (supplierLeft) on 
-		// supplierLeft.l_nationkey.  It then scans
-		// supplierRight, probing the hash table for matches
+	// 	// This basically runs:
+	// 	//
+	// 	// SELECT supplierLeft.l_name + " " supplierRight.r_name, supplierRight.r_acctbal * supplierLeft.l_acctbal
+	// 	// FROM supplierLeft, supplierRight
+	// 	// WHERE (supplierLeft.l_nationkey = supplierRight.r_nationkey) AND
+	// 	//       (supplierLeft.l_nationkey > 6)
+	// 	// 
+	// 	// It does this by hashing the smaller table (supplierLeft) on 
+	// 	// supplierLeft.l_nationkey.  It then scans
+	// 	// supplierRight, probing the hash table for matches
 
-		vector <pair <string, string>> hashAtts;
-		hashAtts.push_back (make_pair (string ("[l_nationkey]"), string ("[r_nationkey]")));
+	// 	vector <pair <string, string>> hashAtts;
+	// 	hashAtts.push_back (make_pair (string ("[l_nationkey]"), string ("[r_nationkey]")));
 
-		vector <string> projections;
-		projections.push_back ("+(+ ([l_name], string[ ]), [r_name])");
-		projections.push_back ("* ([l_acctbal], [r_acctbal])");
-		projections.push_back ("[l_nationkey]");
+	// 	vector <string> projections;
+	// 	projections.push_back ("+(+ ([l_name], string[ ]), [r_name])");
+	// 	projections.push_back ("* ([l_acctbal], [r_acctbal])");
+	// 	projections.push_back ("[l_nationkey]");
 
-		cout << "Do you want to run a:\n";
-		cout << "\t1. Sort merge join.\n";
-		cout << "\t2. Scan join.\n";
-		cout << "Enter 1 or 2:\n";
-		int res;
-		cin >> res;
+	// 	cout << "Do you want to run a:\n";
+	// 	cout << "\t1. Sort merge join.\n";
+	// 	cout << "\t2. Scan join.\n";
+	// 	cout << "Enter 1 or 2:\n";
+	// 	int res;
+	// 	cin >> res;
 
-		if (res == 2) {
-			ScanJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
-				"== ([l_nationkey], [r_nationkey]))", projections, hashAtts,
-				"&& (< ([l_acctbal], int[4500]), > ([l_acctbal], int[4450]))",
-				"&& (< ([r_acctbal], int[2500]), > ([r_acctbal], int[2450]))");
-			cout << "running join\n";
-			myOp.run ();
-		} else if (res == 1) {
-			SortMergeJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
-				"== ([l_nationkey], [r_nationkey]))", projections, 
-				make_pair (string ("[l_nationkey]"), string ("[r_nationkey]")),
-				"&& (< ([l_acctbal], int[4500]), > ([l_acctbal], int[4450]))",
-				"&& (< ([r_acctbal], int[2500]), > ([r_acctbal], int[2450]))");
-			cout << "running join\n";
-			myOp.run ();
-		} else {
-			cout << "I said 1 or 2!!!\n";
-			return 3;
-		}
+	// 	if (res == 2) {
+	// 		ScanJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
+	// 			"== ([l_nationkey], [r_nationkey]))", projections, hashAtts,
+	// 			"&& (< ([l_acctbal], int[4500]), > ([l_acctbal], int[4450]))",
+	// 			"&& (< ([r_acctbal], int[2500]), > ([r_acctbal], int[2450]))");
+	// 		cout << "running join\n";
+	// 		myOp.run ();
+	// 	} else if (res == 1) {
+	// 		SortMergeJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
+	// 			"== ([l_nationkey], [r_nationkey]))", projections, 
+	// 			make_pair (string ("[l_nationkey]"), string ("[r_nationkey]")),
+	// 			"&& (< ([l_acctbal], int[4500]), > ([l_acctbal], int[4450]))",
+	// 			"&& (< ([r_acctbal], int[2500]), > ([r_acctbal], int[2450]))");
+	// 		cout << "running join\n";
+	// 		myOp.run ();
+	// 	} else {
+	// 		cout << "I said 1 or 2!!!\n";
+	// 		return 3;
+	// 	}
 
-		cout << "Done with the join, now I am counting the result size.\n";
+	// 	cout << "Done with the join, now I am counting the result size.\n";
 
-		// now, we count the total number of records with each nation name
-		vector <pair <MyDB_AggType, string>> aggsToCompute;
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
+	// 	// now, we count the total number of records with each nation name
+	// 	vector <pair <MyDB_AggType, string>> aggsToCompute;
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
 
-		vector <string> groupings;
-		groupings.push_back ("[nation]");
-		MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
-		mySchemaOutAgain->appendAtt (make_pair ("nation", make_shared <MyDB_IntAttType> ()));
-		mySchemaOutAgain->appendAtt (make_pair ("mycnt", make_shared <MyDB_IntAttType> ()));
-		MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
-		MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
+	// 	vector <string> groupings;
+	// 	groupings.push_back ("[nation]");
+	// 	MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
+	// 	mySchemaOutAgain->appendAtt (make_pair ("nation", make_shared <MyDB_IntAttType> ()));
+	// 	mySchemaOutAgain->appendAtt (make_pair ("mycnt", make_shared <MyDB_IntAttType> ()));
+	// 	MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
+	// 	MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
 
-		Aggregate myOpAgain (supplierTableOut, aggTableOut, aggsToCompute, groupings, "bool[true]");
-		cout << "running aggregate\n";
-		myOpAgain.run ();
+	// 	Aggregate myOpAgain (supplierTableOut, aggTableOut, aggsToCompute, groupings, "bool[true]");
+	// 	cout << "running aggregate\n";
+	// 	myOpAgain.run ();
 		
-                MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
+    //             MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
+    //             MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
 
-		cout << "\nThe output should be\n\t0|64|\n\t1|96|\n\t2|64|\n\t3|96|\n\t4|192|\n\t5|256|\n\t6|192|\n\t7|96|\n\t8|64|\n\t9|128|\n\t11|288|\n\t14|96|\n\t15|128|\n\t16|128|\n\t17|32|\n\t19|64|\n\t20|384|\n\t24|64|\n\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
-			cout << temp << "\n";
-                }
-	}
+	// 	cout << "\nThe output should be\n\t0|64|\n\t1|96|\n\t2|64|\n\t3|96|\n\t4|192|\n\t5|256|\n\t6|192|\n\t7|96|\n\t8|64|\n\t9|128|\n\t11|288|\n\t14|96|\n\t15|128|\n\t16|128|\n\t17|32|\n\t19|64|\n\t20|384|\n\t24|64|\n\n";
+    //             while (myIter->advance ()) {
+    //                     myIter->getCurrent (temp);
+	// 		cout << temp << "\n";
+    //             }
+	// }
 
-	{
-		// get the output schema and table
-		MyDB_SchemaPtr mySchemaOut = make_shared <MyDB_Schema> ();
-		mySchemaOut->appendAtt (make_pair ("name", make_shared <MyDB_StringAttType> ()));
-		mySchemaOut->appendAtt (make_pair ("acctbal", make_shared <MyDB_DoubleAttType> ()));
-		MyDB_TablePtr myTableOut = make_shared <MyDB_Table> ("supplierOut", "supplierOut.bin", mySchemaOut);
-		MyDB_TableReaderWriterPtr supplierTableOut = make_shared <MyDB_TableReaderWriter> (myTableOut, myMgr);
+	// {
+	// 	// get the output schema and table
+	// 	MyDB_SchemaPtr mySchemaOut = make_shared <MyDB_Schema> ();
+	// 	mySchemaOut->appendAtt (make_pair ("name", make_shared <MyDB_StringAttType> ()));
+	// 	mySchemaOut->appendAtt (make_pair ("acctbal", make_shared <MyDB_DoubleAttType> ()));
+	// 	MyDB_TablePtr myTableOut = make_shared <MyDB_Table> ("supplierOut", "supplierOut.bin", mySchemaOut);
+	// 	MyDB_TableReaderWriterPtr supplierTableOut = make_shared <MyDB_TableReaderWriter> (myTableOut, myMgr);
 
-		// This basically runs:
-		//
-		// SELECT supplierLeft.l_name + " " supplierRight.r_name, supplierRight.r_acctbal * supplierLeft.l_acctbal
-		// FROM supplierLeft, supplierRight
-		// WHERE (supplierLeft.l_nationkey = supplierRight.r_nationkey) AND
-		//       (supplierLeft.l_nationkey > 6)
-		// 
-		// It does this by hashing the smaller table (supplierLeft) on 
-		// supplierLeft.l_nationkey.  It then scans
-		// supplierRight, probing the hash table for matches
+	// 	// This basically runs:
+	// 	//
+	// 	// SELECT supplierLeft.l_name + " " supplierRight.r_name, supplierRight.r_acctbal * supplierLeft.l_acctbal
+	// 	// FROM supplierLeft, supplierRight
+	// 	// WHERE (supplierLeft.l_nationkey = supplierRight.r_nationkey) AND
+	// 	//       (supplierLeft.l_nationkey > 6)
+	// 	// 
+	// 	// It does this by hashing the smaller table (supplierLeft) on 
+	// 	// supplierLeft.l_nationkey.  It then scans
+	// 	// supplierRight, probing the hash table for matches
 
-		vector <pair <string, string>> hashAtts;
-		hashAtts.push_back (make_pair (string ("[l_nationkey]"), string ("[r_nationkey]")));
+	// 	vector <pair <string, string>> hashAtts;
+	// 	hashAtts.push_back (make_pair (string ("[l_nationkey]"), string ("[r_nationkey]")));
 
-		vector <string> projections;
-		projections.push_back ("+(+ ([l_name], string[ ]), [r_name])");
-		projections.push_back ("* ([l_acctbal], [r_acctbal])");
+	// 	vector <string> projections;
+	// 	projections.push_back ("+(+ ([l_name], string[ ]), [r_name])");
+	// 	projections.push_back ("* ([l_acctbal], [r_acctbal])");
 
-		cout << "Do you want to run a:\n";
-		cout << "\t1. Sort merge join.\n";
-		cout << "\t2. Scan join.\n";
-		cout << "Enter 1 or 2:\n";
-		int res;
-		cin >> res;
+	// 	cout << "Do you want to run a:\n";
+	// 	cout << "\t1. Sort merge join.\n";
+	// 	cout << "\t2. Scan join.\n";
+	// 	cout << "Enter 1 or 2:\n";
+	// 	int res;
+	// 	cin >> res;
 
-		if (res == 2) {
-			ScanJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
-				"== ([l_nationkey], [r_nationkey]))", projections, hashAtts,
-				"< ([l_nationkey], int[2])",
-				"bool[true]");
-			cout << "running join (may take some time)\n";
-			myOp.run ();
-		} else if (res == 1) {
-			SortMergeJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
-				"== ([l_nationkey], [r_nationkey]))", projections, 
-				make_pair (string ("[l_nationkey]"), string ("[r_nationkey]")),
-				"< ([l_nationkey], int[2])",
-				"bool[true]");
-			cout << "running join (may take some time)\n";
-			myOp.run ();
-		} else {
-			cout << "I said 1 or 2!!!\n";
-			return 3;
-		}
+	// 	if (res == 2) {
+	// 		ScanJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
+	// 			"== ([l_nationkey], [r_nationkey]))", projections, hashAtts,
+	// 			"< ([l_nationkey], int[2])",
+	// 			"bool[true]");
+	// 		cout << "running join (may take some time)\n";
+	// 		myOp.run ();
+	// 	} else if (res == 1) {
+	// 		SortMergeJoin myOp (supplierTableL, supplierTableRNoBPlus, supplierTableOut, 
+	// 			"== ([l_nationkey], [r_nationkey]))", projections, 
+	// 			make_pair (string ("[l_nationkey]"), string ("[r_nationkey]")),
+	// 			"< ([l_nationkey], int[2])",
+	// 			"bool[true]");
+	// 		cout << "running join (may take some time)\n";
+	// 		myOp.run ();
+	// 	} else {
+	// 		cout << "I said 1 or 2!!!\n";
+	// 		return 3;
+	// 	}
 
-		cout << "Done with the join, now I am counting the result size.\n";
+	// 	cout << "Done with the join, now I am counting the result size.\n";
 
-		// now, we count the total number of records with each nation name
-		vector <pair <MyDB_AggType, string>> aggsToCompute;
-		aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
+	// 	// now, we count the total number of records with each nation name
+	// 	vector <pair <MyDB_AggType, string>> aggsToCompute;
+	// 	aggsToCompute.push_back (make_pair (MyDB_AggType :: cnt, "int[0]"));
 
-		vector <string> groupings;
-		MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
-		mySchemaOutAgain->appendAtt (make_pair ("mycnt", make_shared <MyDB_IntAttType> ()));
-		MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
-		MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
+	// 	vector <string> groupings;
+	// 	MyDB_SchemaPtr mySchemaOutAgain  = make_shared <MyDB_Schema> ();
+	// 	mySchemaOutAgain->appendAtt (make_pair ("mycnt", make_shared <MyDB_IntAttType> ()));
+	// 	MyDB_TablePtr aggTable = make_shared <MyDB_Table> ("aggOut", "aggOut.bin", mySchemaOutAgain);
+	// 	MyDB_TableReaderWriterPtr aggTableOut = make_shared <MyDB_TableReaderWriter> (aggTable, myMgr);
 
-		Aggregate myOpAgain (supplierTableOut, aggTableOut, aggsToCompute, groupings, "bool[true]");
-		cout << "running aggregate (may take some time)\n";
-		myOpAgain.run ();
+	// 	Aggregate myOpAgain (supplierTableOut, aggTableOut, aggsToCompute, groupings, "bool[true]");
+	// 	cout << "running aggregate (may take some time)\n";
+	// 	myOpAgain.run ();
 		
-                MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
-                MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
+    //             MyDB_RecordPtr temp = aggTableOut->getEmptyRecord ();
+    //             MyDB_RecordIteratorAltPtr myIter = aggTableOut->getIteratorAlt ();
 
-		cout << "\nThe output should be 11103008:\n";
-                while (myIter->advance ()) {
-                        myIter->getCurrent (temp);
-			cout << temp << "\n";
-                }
-	}
+	// 	cout << "\nThe output should be 11103008:\n";
+    //             while (myIter->advance ()) {
+    //                     myIter->getCurrent (temp);
+	// 		cout << temp << "\n";
+    //             }
+	// }
 
 }
 

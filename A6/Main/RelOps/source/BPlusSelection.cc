@@ -5,7 +5,7 @@
 #include "BPlusSelection.h"
 
 BPlusSelection :: BPlusSelection (MyDB_BPlusTreeReaderWriterPtr inputIn, MyDB_TableReaderWriterPtr outputIn,
-                MyDB_AttValPtr low, MyDB_AttValPtr high,
+                MyDB_AttValPtr lowIn, MyDB_AttValPtr highIn,
                 string selectionPredicateIn, vector <string> projectionsIn) {
                     input = inputIn;
                     output = outputIn;
@@ -19,14 +19,14 @@ BPlusSelection :: BPlusSelection (MyDB_BPlusTreeReaderWriterPtr inputIn, MyDB_Ta
 void BPlusSelection :: run () {
     
     // Initialize input and output Record objects
-    MyDB_RecordPtr rec = input.getEmptyRecord ();
-    MyDB_RecordPtr outRec = output.getEmptyRecord ();
+    MyDB_RecordPtr rec = input->getEmptyRecord ();
+    MyDB_RecordPtr outRec = output->getEmptyRecord ();
 
     // Compile for the predicate
     func pred = rec->compileComputation (selectionPredicate);
 
     // Get data range from the input table
-    MyDB_RecordIteratorAltPtr myIter = input.getSortedRangeIteratorAlt(low, high);
+    MyDB_RecordIteratorAltPtr myIter = input->getSortedRangeIteratorAlt(low, high);
 
     // Set up attributes after projection
     vector <func> finalComputations;
@@ -51,7 +51,7 @@ void BPlusSelection :: run () {
 
         // Write
         outRec->recordContentHasChanged ();
-        output->append (outputRec);	
+        output->append (outRec);	
     }
 }
 
