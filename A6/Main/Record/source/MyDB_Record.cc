@@ -841,6 +841,24 @@ function <bool ()> buildRecordComparator (MyDB_RecordPtr lhs,  MyDB_RecordPtr rh
 	
 }
 
+func buildRecordComparator (MyDB_RecordPtr lhs,  MyDB_RecordPtr rhs, string lKey, string rKey, int type) {
+		// compile a computation over the LHS and over the RHS
+	char *str = (char *) lKey.c_str ();
+	pair <func, MyDB_AttTypePtr> lhsFunc = lhs->compileHelper (str);
+
+	str = (char *) rKey.c_str ();
+	pair <func, MyDB_AttTypePtr> rhsFunc = rhs->compileHelper (str);
+
+	// and then build a lambda that performs the computatation
+	if(type == 1) {
+		return (lhs->gt (lhsFunc, rhsFunc)).first;
+	}
+	if(type == -1) {
+		return (lhs->lt (lhsFunc, rhsFunc)).first;
+	}
+	return (lhs->eq (lhsFunc, rhsFunc)).first;
+}
+
 MyDB_Record :: MyDB_Record (MyDB_SchemaPtr mySchemaIn) {
 	mySchema = mySchemaIn;
 

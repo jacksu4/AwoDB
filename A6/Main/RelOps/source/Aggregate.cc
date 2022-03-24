@@ -7,7 +7,6 @@
 #include "MyDB_TableReaderWriter.h"
 #include "Aggregate.h"
 #include <unordered_map>
-#include <iostream>
 
 using namespace std;
 
@@ -23,7 +22,16 @@ Aggregate :: Aggregate (MyDB_TableReaderWriterPtr inputIn, MyDB_TableReaderWrite
 
 void Aggregate :: run () {
 
-	// cout << "Aggregate: Initialize the schemas\n" << flush;
+	// Check output schema
+	if (output->getTable ()->getSchema ()->getAtts ().size () != aggsToCompute.size () + groupings.size ()) {
+		cout << "Invalid output schema\n";
+		return;
+	}
+
+    //
+    // PREPARATION
+    //
+
     // Initialize the schemas
 	MyDB_SchemaPtr combinedSchema = make_shared <MyDB_Schema> ();
 	MyDB_SchemaPtr aggSchema = make_shared <MyDB_Schema> ();
@@ -45,14 +53,12 @@ void Aggregate :: run () {
 	combinedSchema->appendAtt(make_pair ("Count", make_shared<MyDB_IntAttType>()));
 	aggSchema->appendAtt(make_pair ("Count", make_shared<MyDB_IntAttType>()));
     
-	// cout << "Aggregate: Initialize records to be used\n" << flush;
     // Initialize records to be used
     MyDB_RecordPtr inputRec = input->getEmptyRecord ();
     MyDB_RecordPtr aggRec = make_shared<MyDB_Record>(aggSchema);
     MyDB_RecordPtr combinedRec = make_shared<MyDB_Record>(combinedSchema);
     combinedRec->buildFrom(inputRec, aggRec);
 
-	// cout << "Aggregate: Preparation for grouping\n" << flush;
     // Preparation for grouping
     unordered_map <size_t, vector <void *>> groupingHash;
     vector<func> groupingFuncs;
@@ -73,13 +79,11 @@ void Aggregate :: run () {
 	}
 	sameGroupFunc = combinedRec->compileComputation (sameGroup);	
 
-	// cout << "Aggregate: Preparation for aggregate\n" << flush;
     // Preparation for aggregate
     vector<func> aggProcessFuncs;
     vector<func> aggEndFuncs;
     index = 0;
     for (auto &agg : aggsToCompute) {
-		// cout << agg.first << "\n" << flush;
         if(agg.first == MyDB_AggType :: sum) {
 		    aggProcessFuncs.push_back (combinedRec->compileComputation ("+ ([AggAtt" + to_string (index) + "], " + agg.second + ")"));
             aggEndFuncs.push_back(combinedRec->compileComputation("[AggAtt" + to_string (index) + "]"));
@@ -95,39 +99,36 @@ void Aggregate :: run () {
 	aggProcessFuncs.push_back (combinedRec->compileComputation ("+ ( int[1], [Count])"));
 	aggEndFuncs.push_back (combinedRec->compileComputation ("[Count]"));
 
-	// cout << "Aggregate: Preparation for selection\n" << flush;
     // Preparation for selection
     func pred = inputRec->compileComputation (selectionPredicate);
 
-	// cout << "Aggregate: Preparation for temp data using input table's buffer manager\n" << flush;
 	// Preparation for temp data using input table's buffer manager
-	MyDB_PageReaderWriterPtr lastPage = make_shared<MyDB_PageReaderWriter>(true, *(input->getBufferMgr ()));
+	MyDB_PageReaderWriter lastPage (true, *(input->getBufferMgr ()));
 	vector<MyDB_PageReaderWriter> tempPages;
-	tempPages.push_back(*lastPage);
+	tempPages.push_back(lastPage);
 
-	// cout << "Aggregate: Start iteration!\n" << flush;
+    //
+    // ACTION
+    //
+	
     // Start iteration
     MyDB_RecordIteratorAltPtr myIter = input->getIteratorAlt ();
     while (myIter->advance ()) {
 
         myIter->getCurrent (inputRec);
 
-		// cout << "Aggregate Iteration: Do Selection\n" << flush;
         // Do selection
         if (!pred ()->toBool ()) {
 			continue;
 		}
 
-		// cout << "Aggregate Iteration: match aggRec, Hashing\n" << flush;
         size_t hashVal = 0;
 		for (auto &f : groupingFuncs) {
 			hashVal ^= f ()->hash ();
 		}
 
-		// cout << "Aggregate Iteration: match aggRec, checking\n" << flush;
 		// Find the corresponding aggRec
 		vector <void *> &possiblePos = groupingHash[hashVal];
-		cout << possiblePos.size() << "\n" << flush;
 		void * loc = nullptr;
 		for(auto &pos : possiblePos) {
 			aggRec->fromBinary(pos);
@@ -138,7 +139,6 @@ void Aggregate :: run () {
 			break;
 		}
 
-		// cout << "Aggregate Iteration: Not match, Initializing new record\n" << flush;
 		if(loc == nullptr) {
 			int i = 0;
 			for (auto &f : groupingFuncs) {
@@ -149,7 +149,6 @@ void Aggregate :: run () {
 			}
 		}
 
-		// cout << "Aggregate Iteration: calculate current result\n" << flush;
 		// Update aggregation result
 		int i = 0;
 		for(auto &f : aggProcessFuncs) {
@@ -157,25 +156,23 @@ void Aggregate :: run () {
 		}
 		aggRec->recordContentHasChanged ();
 
-		// cout << "Aggregate Iteration: match, write it\n" << flush;
 		if(loc != nullptr) {
 			aggRec->toBinary (loc);
 			continue;
 		}
 
-		// cout << "Aggregate Iteration: Not match, generate it in buffer\n" << flush;
 		while(loc == nullptr) {
-			loc = lastPage->appendAndReturnLocation(aggRec);
+			loc = lastPage.appendAndReturnLocation(aggRec);
 			if(loc == nullptr) {
-				lastPage = make_shared<MyDB_PageReaderWriter>(true, *(input->getBufferMgr ()));
-				tempPages.push_back(*lastPage);
+				MyDB_PageReaderWriter nextPage (true, *(input->getBufferMgr ()));
+				lastPage = nextPage;
+				tempPages.push_back(lastPage);
 			} else {
 				possiblePos.push_back(loc);
 			}
 		}
     }
 
-	// cout << "Aggregate: Output\n" << flush;
 	// Output
 	MyDB_RecordPtr outputRec = output->getEmptyRecord ();
 	MyDB_RecordIteratorAltPtr ouputIter = getIteratorAlt (tempPages);

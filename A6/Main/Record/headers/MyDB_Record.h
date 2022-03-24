@@ -109,6 +109,8 @@ public:
 	// used by the method compileComputation above
 	friend function <bool ()> buildRecordComparator (MyDB_RecordPtr lhs,  MyDB_RecordPtr rhs, string computation);
 
+	friend func buildRecordComparator (MyDB_RecordPtr lhs,  MyDB_RecordPtr rhs, string lKey, string rKey, int type);
+
 	// access the schema
 	MyDB_SchemaPtr &getSchema ();
 
