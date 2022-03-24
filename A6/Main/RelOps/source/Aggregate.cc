@@ -35,7 +35,6 @@ void Aggregate :: run () {
     // Initialize the schemas
 	MyDB_SchemaPtr combinedSchema = make_shared <MyDB_Schema> ();
 	MyDB_SchemaPtr aggSchema = make_shared <MyDB_Schema> ();
-    size_t schemaSize = aggsToCompute.size() + groupings.size();
     int index = 0;
 	for(auto &&att : input->getTable ()->getSchema ()->getAtts ()) {
         combinedSchema->appendAtt(att);
