@@ -19,10 +19,12 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 	}
 
     if (tablesToProcess.size() == 1) {
+		cout<< "inside one table query" <<endl;
         MyDB_TablePtr table = allTables[tablesToProcess[0].first];
         MyDB_SchemaPtr schema = make_shared<MyDB_Schema>();
         vector<string> exprs;
         vector<string> groupings;
+		vector<ExprTreePtr> topCNF;
         bool areAggs = false;
 //        vector<pair<MyDB_AggType, string>> aggsToCompute;
 //
@@ -37,6 +39,13 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 //                groupings.push_back(v->toString());
 //            }
 //        }
+        for (auto a: allDisjunctions) {
+            bool in = a->referencesTable (tablesToProcess[0].second);
+            if (in) {
+                cout << "top " << a->toString () << "\n";
+                topCNF.push_back (a);
+            }
+        }
 
         for (auto b: table->getSchema ()->getAtts ()) {
             bool needIt = false;
@@ -48,13 +57,14 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
             if (needIt) {
                 schema->getAtts().push_back(make_pair(tablesToProcess[0].second + "_" + b.first, b.second));
                 exprs.push_back("[" + b.first + "]");
-                cout << "left expr: " << ("[" + b.first + "]") << "\n";
+                cout << "expr: " << ("[" + b.first + "]") << "\n";
             }
         }
         if (!areAggs) {
             LogicalOpPtr returnVal = make_shared<LogicalTableScan>(allTableReaderWriters[tablesToProcess[0].first],
-                                                                   make_shared <MyDB_Table> ("table", "topStorageLoc", schema),
-                                                                   make_shared <MyDB_Stats> (table, tablesToProcess[0].second), allDisjunctions, exprs);
+                                                                   make_shared <MyDB_Table> ("table", "storageLoc", schema),
+                                                                   make_shared <MyDB_Stats> (table, tablesToProcess[0].second), topCNF, exprs);
+
             return returnVal;
         } else {
             cout << "aggregation not implement yet" << endl;
