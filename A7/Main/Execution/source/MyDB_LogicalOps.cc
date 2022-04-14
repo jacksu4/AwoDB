@@ -2,7 +2,10 @@
 #ifndef LOG_OP_CC
 #define LOG_OP_CC
 
+#include <sstream>
 #include "MyDB_LogicalOps.h"
+#include "RegularSelection.h"
+#include "Aggregate.h"
 
 // fill this out!  This should actually run the aggregation via an appropriate RelOp, and then it is going to
 // have to unscramble the output attributes and compute exprsToCompute using an execution of the RegularSelection 
@@ -11,7 +14,38 @@
 //
 // Note that after the left and right hand sides have been executed, the temporary tables associated with the two 
 // sides should be deleted (via a kill to killFile () on the buffer manager)
-MyDB_TableReaderWriterPtr LogicalAggregate :: execute () {
+MyDB_TableReaderWriterPtr LogicalAggregate :: execute (MyDB_BufferManagerPtr mgr) {
+//    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
+//    string groupingString;
+//    if (groupings.size() == 1) {
+//        groupingString = groupings[0]->toString();
+//    } else {
+//        groupingString = groupings[0]->toString();
+//        for (int i = 1; i < groupings.size(); i++) {
+//            groupingString = "&& (" + groupingString + ", " + groupings[i]->toString() + ")";
+//        }
+//    }
+//
+//    cout << groupingString << endl;
+//
+//    Aggregate agg(inputOp, outputTable, exprsToCompute, groupingString, );
+//    agg.run();
+//
+//    MyDB_RecordPtr rec = outputTable->getEmptyRecord();
+//    MyDB_RecordIteratorAltPtr iter = outputTable->getIteratorAlt();
+//    int size = 0;
+//    while(iter->advance()) {
+//        iter->getCurrent(rec);
+//        if(size < 30) {
+//            cout << rec << endl;
+//        }
+//        size++;
+//    }
+//    if(remove("topStorageLoc") != 0) {
+//        perror("Error deleting file");
+//    } else {
+//        puts("File successfully deleted");
+//    }
 	return nullptr;
 
 }
@@ -35,7 +69,17 @@ pair <double, MyDB_StatsPtr> LogicalJoin :: cost () {
 // should use a heuristic to choose which input is to be hashed and which is to be scanned), and execute the join.
 // Note that after the left and right hand sides have been executed, the temporary tables associated with the two 
 // sides should be deleted (via a kill to killFile () on the buffer manager)
-MyDB_TableReaderWriterPtr LogicalJoin :: execute () {
+MyDB_TableReaderWriterPtr LogicalJoin :: execute (MyDB_BufferManagerPtr mgr) {
+//    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
+//    string selectionPredString;
+//    if (outputSelectionPredicate.size() == 1) {
+//        selectionPredString = outputSelectionPredicate[0]->toString();
+//    } else {
+//        selectionPredString = "&& (" + outputSelectionPredicate[0]->toString() + ", " + outputSelectionPredicate[1]->toString() + ")";
+//        for (int i = 2; i < outputSelectionPredicate.size(); i++) {
+//            selectionPredString = "&& (" + selectionPredString + ", " + outputSelectionPredicate[i]->toString() + ")";
+//        }
+//    }
 	return nullptr;
 }
 
@@ -50,7 +94,40 @@ pair <double, MyDB_StatsPtr> LogicalTableScan :: cost () {
 // is to somehow set things up so that if a B+-Tree is NOT used, that the table scan does not actually do anything,
 // and the selection predicate is handled at the level of the parent (by filtering, for example, the data that is
 // input into a join)
-MyDB_TableReaderWriterPtr LogicalTableScan :: execute () {
+MyDB_TableReaderWriterPtr LogicalTableScan :: execute (MyDB_BufferManagerPtr mgr) {
+    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
+    string selectionPredString;
+    if (selectionPred.size() == 1) {
+        selectionPredString = selectionPred[0]->toString();
+    } else {
+        selectionPredString = selectionPred[0]->toString();
+        for (int i = 1; i < selectionPred.size(); i++) {
+            selectionPredString = "&& (" + selectionPredString + ", " + selectionPred[i]->toString() + ")";
+        }
+    }
+
+    cout << selectionPredString << endl;
+
+    RegularSelection selection (inputSpec, outputTable, selectionPredString, exprsToCompute);
+    selection.run();
+
+    MyDB_RecordPtr rec = outputTable->getEmptyRecord();
+    MyDB_RecordIteratorAltPtr iter = outputTable->getIteratorAlt();
+    int size = 0;
+    while(iter->advance()) {
+        iter->getCurrent(rec);
+        if(size < 30) {
+            cout << rec << endl;
+        }
+        size++;
+    }
+
+    if(remove("topStorageLoc") != 0) {
+        perror("Error deleting file");
+    } else {
+        puts("File successfully deleted");
+    }
+
 	return nullptr;
 }
 

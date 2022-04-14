@@ -3,6 +3,8 @@
 #define SFW_QUERY_CC
 
 #include "ParserTypes.h"
+#include "unordered_map"
+#include "ExprTree.h"
 	
 // builds and optimizes a logical query plan for a SFW query, returning the logical query plan
 // 
@@ -11,10 +13,55 @@
 LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters) {
 
 	// first, make sure we have exactly two tables... this prototype only works on two tables!!
-	if (tablesToProcess.size () != 2) {
-		cout << "Sorry, this currently only works for two-table queries!\n";
+	if (tablesToProcess.size () > 2) {
+		cout << "Sorry, this currently only works for two-table or one-table queries!\n";
 		return nullptr;
 	}
+
+    if (tablesToProcess.size() == 1) {
+        MyDB_TablePtr table = allTables[tablesToProcess[0].first];
+        MyDB_SchemaPtr schema = make_shared<MyDB_Schema>();
+        vector<string> exprs;
+        vector<string> groupings;
+        bool areAggs = false;
+//        vector<pair<MyDB_AggType, string>> aggsToCompute;
+//
+//        for(auto v: valuesToSelect) {
+//            if(v->isSum()) {
+//                areAggs = true;
+//                aggsToCompute.push_back(make_pair(MyDB_AggType::sum, v->toString().substr(3)));
+//            } else if (v->isAvg()) {
+//                areAggs = true;
+//                aggsToCompute.push_back(make_pair(MyDB_AggType::avg, v->toString().substr(3)));
+//            } else {
+//                groupings.push_back(v->toString());
+//            }
+//        }
+
+        for (auto b: table->getSchema ()->getAtts ()) {
+            bool needIt = false;
+            for (auto a: valuesToSelect) {
+                if (a->referencesAtt(tablesToProcess[0].second, b.first)) {
+                    needIt = true;
+                }
+            }
+            if (needIt) {
+                schema->getAtts().push_back(make_pair(tablesToProcess[0].second + "_" + b.first, b.second));
+                exprs.push_back("[" + b.first + "]");
+                cout << "left expr: " << ("[" + b.first + "]") << "\n";
+            }
+        }
+        if (!areAggs) {
+            LogicalOpPtr returnVal = make_shared<LogicalTableScan>(allTableReaderWriters[tablesToProcess[0].first],
+                                                                   make_shared <MyDB_Table> ("table", "topStorageLoc", schema),
+                                                                   make_shared <MyDB_Stats> (table, tablesToProcess[0].second), allDisjunctions, exprs);
+            return returnVal;
+        } else {
+            cout << "aggregation not implement yet" << endl;
+            return nullptr;
+        }
+
+    }
 
 	// also, make sure that there are no aggregates in herre
 	bool areAggs = false;

@@ -23,7 +23,7 @@ public:
 
 	// execute the entire plan (executing the children first), then execute this logical operation, and
 	// once this operation has been executed, delete the temporary tables associated with child operations
-	virtual MyDB_TableReaderWriterPtr execute () = 0;
+	virtual MyDB_TableReaderWriterPtr execute (MyDB_BufferManagerPtr mgr) = 0;
 
 	virtual ~LogicalOp () {}
 };
@@ -57,7 +57,7 @@ public:
 	//
 	// Note that after the subquery is executed (as well as any operations that produce temp data) any temporary 
 	// database tables should be deleted (via a kill to killTable () on the buffer manager)
-	MyDB_TableReaderWriterPtr execute ();
+	MyDB_TableReaderWriterPtr execute (MyDB_BufferManagerPtr mgr);
 
 	// we don't really count the cost of the aggregate, so cost its subplan and return that
 	pair <double, MyDB_StatsPtr> cost ();
@@ -102,7 +102,7 @@ public:
 	// should use a heuristic to choose which input is to be hashed and which is to be scanned), and execute the join.
 	// Note that after the left and right hand sides have been executed, the temporary tables associated with the two 
 	// sides should be deleted (via a kill to killTable () on the buffer manager)
-	MyDB_TableReaderWriterPtr execute ();
+	MyDB_TableReaderWriterPtr execute (MyDB_BufferManagerPtr mgr);
 
 private:
 
@@ -144,7 +144,7 @@ public:
 	// is to somehow set things up so that if a B+-Tree is NOT used, that the table scan does not actually do anything,
 	// and the selection predicate is handled at the level of the parent (by filtering, for example, the data that is
 	// input into a join)
-	MyDB_TableReaderWriterPtr execute ();
+	MyDB_TableReaderWriterPtr execute (MyDB_BufferManagerPtr mgr);
 
 private:
 

@@ -167,6 +167,7 @@ int main (int numArgs, char **args) {
 							auto res = myPlan->cost ();
 							cout << "cost was " << res.first << "\n";
 						}
+                        MyDB_TableReaderWriterPtr res = myPlan->execute(myMgr);
 					}
 
 					// get outta here

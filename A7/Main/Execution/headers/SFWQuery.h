@@ -4,6 +4,7 @@
 
 #include "ExprTree.h"
 #include "MyDB_LogicalOps.h"
+#include "Aggregate.h"
 
 // structure that stores an entire SFW query
 struct SFWQuery {
