@@ -20,6 +20,8 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 
     if (tablesToProcess.size() == 1) {
 		cout<< "inside one table query" <<endl;
+		// allTableReaderWriters[tablesToProcess[0].first]->getTable()->getSchema()->setAtts(tablesToProcess[0].second);
+		cout << allTableReaderWriters[tablesToProcess[0].first]->getTable()->getSchema() << endl;
         MyDB_TablePtr table = allTables[tablesToProcess[0].first];
         MyDB_SchemaPtr schema = make_shared<MyDB_Schema>();
         vector<string> exprs;
@@ -39,13 +41,6 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 //                groupings.push_back(v->toString());
 //            }
 //        }
-        for (auto a: allDisjunctions) {
-            bool in = a->referencesTable (tablesToProcess[0].second);
-            if (in) {
-                cout << "top " << a->toString () << "\n";
-                topCNF.push_back (a);
-            }
-        }
 
         for (auto b: table->getSchema ()->getAtts ()) {
             bool needIt = false;
@@ -55,7 +50,7 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
                 }
             }
             if (needIt) {
-                schema->getAtts().push_back(make_pair(tablesToProcess[0].second + "_" + b.first, b.second));
+				schema->appendAtt(make_pair(tablesToProcess[0].second + "_" + b.first, b.second));
                 exprs.push_back("[" + b.first + "]");
                 cout << "expr: " << ("[" + b.first + "]") << "\n";
             }
@@ -63,7 +58,7 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
         if (!areAggs) {
             LogicalOpPtr returnVal = make_shared<LogicalTableScan>(allTableReaderWriters[tablesToProcess[0].first],
                                                                    make_shared <MyDB_Table> ("table", "storageLoc", schema),
-                                                                   make_shared <MyDB_Stats> (table, tablesToProcess[0].second), topCNF, exprs);
+                                                                   make_shared <MyDB_Stats> (table, tablesToProcess[0].second), allDisjunctions, exprs, tablesToProcess[0].second);
 
             return returnVal;
         } else {
@@ -176,10 +171,10 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 	// and it's time to build the query plan
 	LogicalOpPtr leftTableScan = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first], 
 		make_shared <MyDB_Table> ("leftTable", "leftStorageLoc", leftSchema), 
-		make_shared <MyDB_Stats> (leftTable, tablesToProcess[0].second), leftCNF, leftExprs);
+		make_shared <MyDB_Stats> (leftTable, tablesToProcess[0].second), leftCNF, leftExprs, tablesToProcess[0].second);
 	LogicalOpPtr rightTableScan = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[1].first], 
 		make_shared <MyDB_Table> ("rightTable", "rightStorageLoc", rightSchema), 
-		make_shared <MyDB_Stats> (rightTable, tablesToProcess[1].second), rightCNF, rightExprs);
+		make_shared <MyDB_Stats> (rightTable, tablesToProcess[1].second), rightCNF, rightExprs, tablesToProcess[1].second);
 	LogicalOpPtr returnVal = make_shared <LogicalJoin> (leftTableScan, rightTableScan, 
 		make_shared <MyDB_Table> ("topTable", "topStorageLoc", topSchema), topCNF, valuesToSelect);
 

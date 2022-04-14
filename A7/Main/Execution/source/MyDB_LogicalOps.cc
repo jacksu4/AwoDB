@@ -6,6 +6,7 @@
 #include "MyDB_LogicalOps.h"
 #include "RegularSelection.h"
 #include "Aggregate.h"
+#include <time.h>
 
 // fill this out!  This should actually run the aggregation via an appropriate RelOp, and then it is going to
 // have to unscramble the output attributes and compute exprsToCompute using an execution of the RegularSelection 
@@ -89,24 +90,33 @@ pair <double, MyDB_StatsPtr> LogicalTableScan :: cost () {
 	return make_pair (returnVal->getTupleCount (), returnVal);	
 }
 
+string LogicalTableScan :: cutPrefix(string input, string alias) {
+    size_t start_pos = input.find("["+alias+"_"+alias+"_");
+    while (start_pos != std::string::npos) {
+        input = input.substr(0, start_pos) + "[" + alias + "_" + input.substr(start_pos+3+alias.length()*2);
+        start_pos = input.find("["+alias+"_"+alias+"_");
+    }
+    return input;
+}
+
 // fill this out!  This should heuristically choose whether to use a B+-Tree (if appropriate) or just a regular
 // table scan, and then execute the table scan using a relational selection.  Note that a desirable optimization
 // is to somehow set things up so that if a B+-Tree is NOT used, that the table scan does not actually do anything,
 // and the selection predicate is handled at the level of the parent (by filtering, for example, the data that is
 // input into a join)
 MyDB_TableReaderWriterPtr LogicalTableScan :: execute (MyDB_BufferManagerPtr mgr) {
+    time_t start, stop;
+    start = time(NULL);
     MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
     string selectionPredString;
     if (selectionPred.size() == 1) {
-        selectionPredString = selectionPred[0]->toString();
+        selectionPredString = cutPrefix(selectionPred[0]->toString(), aliasName);
     } else {
-        selectionPredString = selectionPred[0]->toString();
+        selectionPredString = cutPrefix(selectionPred[0]->toString(), aliasName);
         for (int i = 1; i < selectionPred.size(); i++) {
-            selectionPredString = "&& (" + selectionPredString + ", " + selectionPred[i]->toString() + ")";
+            selectionPredString = "&& (" + selectionPredString + ", " + cutPrefix(selectionPred[i]->toString(), aliasName) + ")";
         }
     }
-
-    cout << selectionPredString << endl;
 
     RegularSelection selection (inputSpec, outputTable, selectionPredString, exprsToCompute);
     selection.run();
@@ -122,11 +132,15 @@ MyDB_TableReaderWriterPtr LogicalTableScan :: execute (MyDB_BufferManagerPtr mgr
         size++;
     }
 
-    if(remove("topStorageLoc") != 0) {
-        perror("Error deleting file");
-    } else {
-        puts("File successfully deleted");
+    if (size >= 30) {
+        cout << "Finished printing first 30 records" << endl;
     }
+
+    stop = time(NULL);
+    printf("Time used is %ld seconds.\n", (stop - start));
+    printf("The number of total records is %d.\n", size);
+
+    remove("storageLoc");
 
 	return nullptr;
 }

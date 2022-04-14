@@ -133,11 +133,13 @@ public:
 	//    of attributes that we are asking for from a base table
 	//
 	LogicalTableScan (MyDB_TableReaderWriterPtr inputSpec, MyDB_TablePtr outputSpec, MyDB_StatsPtr inputStats, 
-		vector <ExprTreePtr> &selectionPred, vector <string> &exprsToCompute) : inputSpec (inputSpec), outputSpec (outputSpec),
-		inputStats (inputStats), selectionPred (selectionPred), exprsToCompute (exprsToCompute) {}
+		vector <ExprTreePtr> &selectionPred, vector <string> &exprsToCompute, string aliasName) : inputSpec (inputSpec), outputSpec (outputSpec),
+		inputStats (inputStats), selectionPred (selectionPred), exprsToCompute (exprsToCompute), aliasName (aliasName) {}
 
 	// this costs the table scan returning the compute set of statistics for the output
 	pair <double, MyDB_StatsPtr> cost ();
+
+	string cutPrefix(string input, string alias);
 
 	// fill this out!  This should heuristically choose whether to use a B+-Tree (if appropriate) or just a regular
 	// table scan, and then execute the table scan using a relational selection.  Note that a desirable optimization
@@ -153,6 +155,7 @@ private:
 	MyDB_StatsPtr inputStats;
         vector <ExprTreePtr> selectionPred;
 	vector <string> exprsToCompute;
+	string aliasName;
 };
 
 #endif
