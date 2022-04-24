@@ -167,7 +167,7 @@ int main (int numArgs, char **args) {
 							auto res = myPlan->cost ();
 							cout << "cost was " << res.first << "\n";
 						}
-                        MyDB_TableReaderWriterPtr res = myPlan->execute(myMgr);
+                        MyDB_TableReaderWriterPtr res = myPlan->execute(make_shared <MyDB_BufferManager> (131072, 4028, "executeFile"));
 					}
 
 					// get outta here

@@ -7,6 +7,8 @@
 #include "RegularSelection.h"
 #include "Aggregate.h"
 #include <time.h>
+#include <unordered_set>
+#include <typeinfo>
 
 // fill this out!  This should actually run the aggregation via an appropriate RelOp, and then it is going to
 // have to unscramble the output attributes and compute exprsToCompute using an execution of the RegularSelection 
@@ -47,7 +49,88 @@ MyDB_TableReaderWriterPtr LogicalAggregate :: execute (MyDB_BufferManagerPtr mgr
 //    } else {
 //        puts("File successfully deleted");
 //    }
-	return nullptr;
+
+    MyDB_TableReaderWriterPtr inputTable = inputOp->execute(mgr);
+
+    time_t start, stop;
+    start = time(NULL);
+
+    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
+    MyDB_SchemaPtr aggTempSchema = make_shared<MyDB_Schema>();
+    vector <ExprTreePtr> groupingList;
+    // for (auto b: outputTable->getTable()->getSchema ()->getAtts ()) {
+    //     // bool needIt = false;
+    //     // for (auto a: valuesToSelect) {
+    //     //     if (a->referencesAtt(tablesToProcess[0].second, b.first)) {
+    //     //         needIt = true;
+    //     //     }
+    //     // }
+    //     // if (needIt) {
+    //     //     selectSchema->appendAtt(make_pair(tablesToProcess[0].second + "_" + b.first, b.second));
+    //     //     exprs.push_back("[" + b.first + "]");
+    //     //     // cout << "expr: " << ("[" + b.first + "]") << "\n";
+    //     // }
+        
+    // }
+	// make_shared<MyDB_Table> ("table", "aggTemp", MyDB_SchemaPtr mySchema, string fileType, string sortAtt);
+    // MyDB_TableReaderWriterPtr aggOutputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
+    vector <string> groupingsStrings;
+    int sizeGroup = 0;
+    for(auto group : groupings) {
+        groupingsStrings.push_back(group->toString());
+        sizeGroup++;
+    }
+    cout << "Grouping size is: " << sizeGroup << endl;
+
+    string selectionPredString = "bool[true]";
+    int countSelectionPred = 0;
+    vector <pair <MyDB_AggType, string>> aggsToCompute;
+    for(auto expr : exprsToCompute) {
+        string exprString = expr->toString();
+        cout << "\nCurrent expression string: " << exprString << "\n" << endl;
+
+        // Check if it is aggregation value
+        if(expr->hasAgg()) {
+            if(expr->isSum()) {
+                string childExpr = exprString.substr(4, exprString.size() - 5);
+                cout << "\nisSum: Current Child: " << childExpr << "\n" << endl;
+                aggsToCompute.push_back(make_pair (MyDB_AggType::aggSum, childExpr));
+            } else if(expr->isAvg()) {
+                string childExpr = exprString.substr(4, exprString.size() - 5);
+                cout << "\nisAvg: Current Child: " << childExpr << "\n" << endl;
+                aggsToCompute.push_back(make_pair (MyDB_AggType::aggAvg, childExpr));
+            }
+        }
+        // for (auto b: outputTable->getTable()->getSchema ()->getAtts ()) {
+        //     groupingList.push_back(make_pair (b.second, expr));
+        // }
+    }
+
+    Aggregate aggregate (inputTable, outputTable, aggsToCompute, groupingsStrings, selectionPredString);
+    aggregate.run();
+
+    MyDB_RecordPtr rec = outputTable->getEmptyRecord();
+    MyDB_RecordIteratorAltPtr iter = outputTable->getIteratorAlt();
+    int size = 0;
+    while(iter->advance()) {
+        iter->getCurrent(rec);
+        if(size < 30) {
+            cout << rec << endl;
+        }
+        size++;
+    }
+
+    if (size >= 30) {
+        cout << "Finished printing first 30 records" << endl;
+    }
+
+    stop = time(NULL);
+    printf("Time used is %ld seconds.\n", (stop - start));
+    printf("The number of total records is %d.\n", size);
+
+    remove("AggStorageLoc");
+
+	return outputTable;
 
 }
 // we don't really count the cost of the aggregate, so cost its subplan and return that
@@ -105,9 +188,10 @@ string LogicalTableScan :: cutPrefix(string input, string alias) {
 // and the selection predicate is handled at the level of the parent (by filtering, for example, the data that is
 // input into a join)
 MyDB_TableReaderWriterPtr LogicalTableScan :: execute (MyDB_BufferManagerPtr mgr) {
+    
     time_t start, stop;
     start = time(NULL);
-    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
+    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, make_shared <MyDB_BufferManager> (131072, 4028, "tempFile"));
     string selectionPredString;
     if (selectionPred.size() == 1) {
         selectionPredString = cutPrefix(selectionPred[0]->toString(), aliasName);
@@ -142,7 +226,7 @@ MyDB_TableReaderWriterPtr LogicalTableScan :: execute (MyDB_BufferManagerPtr mgr
 
     remove("storageLoc");
 
-	return nullptr;
+	return outputTable;
 }
 
 #endif

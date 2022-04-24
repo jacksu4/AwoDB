@@ -5,6 +5,7 @@
 #include "ParserTypes.h"
 #include "unordered_map"
 #include "ExprTree.h"
+#include "MyDB_AttType.h"
 	
 // builds and optimizes a logical query plan for a SFW query, returning the logical query plan
 // 
@@ -23,24 +24,35 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 		// allTableReaderWriters[tablesToProcess[0].first]->getTable()->getSchema()->setAtts(tablesToProcess[0].second);
 		cout << allTableReaderWriters[tablesToProcess[0].first]->getTable()->getSchema() << endl;
         MyDB_TablePtr table = allTables[tablesToProcess[0].first];
-        MyDB_SchemaPtr schema = make_shared<MyDB_Schema>();
+        MyDB_SchemaPtr selectSchema = make_shared<MyDB_Schema>();
+        MyDB_SchemaPtr aggSchema = make_shared<MyDB_Schema>();
         vector<string> exprs;
         vector<string> groupings;
 		vector<ExprTreePtr> topCNF;
         bool areAggs = false;
 //        vector<pair<MyDB_AggType, string>> aggsToCompute;
 //
-//        for(auto v: valuesToSelect) {
-//            if(v->isSum()) {
-//                areAggs = true;
-//                aggsToCompute.push_back(make_pair(MyDB_AggType::sum, v->toString().substr(3)));
-//            } else if (v->isAvg()) {
-//                areAggs = true;
-//                aggsToCompute.push_back(make_pair(MyDB_AggType::avg, v->toString().substr(3)));
-//            } else {
-//                groupings.push_back(v->toString());
-//            }
-//        }
+		for(auto v: valuesToSelect) {
+			// cout << "\n" << v->toString() << "\n" << endl;
+			if(v->hasAgg()) {
+				areAggs = true;
+			}
+			bool isCount = true;
+			for (auto b: table->getSchema ()->getAtts ()) {
+				if(v->referencesAtt(tablesToProcess[0].second, b.first)) {
+					if(v->isAvg()) {
+						aggSchema->appendAtt(make_pair(v->toString(), make_shared <MyDB_DoubleAttType> ()));
+					} else {
+						aggSchema->appendAtt(make_pair(v->toString(), b.second));
+					}
+					isCount = false;
+					break;
+				}
+			}
+			if(isCount) {
+				aggSchema->appendAtt(make_pair(v->toString(), make_shared <MyDB_IntAttType> ()));
+			}
+		}
 
         for (auto b: table->getSchema ()->getAtts ()) {
             bool needIt = false;
@@ -50,22 +62,20 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
                 }
             }
             if (needIt) {
-				schema->appendAtt(make_pair(tablesToProcess[0].second + "_" + b.first, b.second));
+				selectSchema->appendAtt(make_pair(tablesToProcess[0].second + "_" + b.first, b.second));
                 exprs.push_back("[" + b.first + "]");
-                cout << "expr: " << ("[" + b.first + "]") << "\n";
+                // cout << "expr: " << ("[" + b.first + "]") << "\n";
             }
         }
+		LogicalOpPtr tableScanRet = make_shared<LogicalTableScan>(allTableReaderWriters[tablesToProcess[0].first],
+													make_shared <MyDB_Table> ("table", "storageLoc", selectSchema),
+													make_shared <MyDB_Stats> (table, tablesToProcess[0].second), allDisjunctions, exprs, tablesToProcess[0].second);
         if (!areAggs) {
-            LogicalOpPtr returnVal = make_shared<LogicalTableScan>(allTableReaderWriters[tablesToProcess[0].first],
-                                                                   make_shared <MyDB_Table> ("table", "storageLoc", schema),
-                                                                   make_shared <MyDB_Stats> (table, tablesToProcess[0].second), allDisjunctions, exprs, tablesToProcess[0].second);
-
-            return returnVal;
-        } else {
-            cout << "aggregation not implement yet" << endl;
-            return nullptr;
+            return tableScanRet;
         }
 
+		LogicalOpPtr AggRet = make_shared<LogicalAggregate>(tableScanRet, make_shared <MyDB_Table> ("table", "AggStorageLoc", aggSchema), valuesToSelect, groupingClauses);
+		return AggRet;
     }
 
 	// also, make sure that there are no aggregates in herre
@@ -214,7 +224,7 @@ SFWQuery :: SFWQuery (struct ValueList *selectClause, struct FromList *fromClaus
         struct CNF *cnf) {
         valuesToSelect = selectClause->valuesToCompute;
         tablesToProcess = fromClause->aliases;
-	allDisjunctions = cnf->disjunctions;
+		allDisjunctions = cnf->disjunctions;
 }
 
 SFWQuery :: SFWQuery (struct ValueList *selectClause, struct FromList *fromClause) {

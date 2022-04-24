@@ -2,3 +2,10 @@
 CMakeLists.txt
 cmake-build-debug
 .idea
+
+*.o
+*.bin
+*.tbl
+myCat
+*.sql
+queries/
