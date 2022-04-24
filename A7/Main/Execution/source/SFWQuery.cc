@@ -21,9 +21,6 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 	}
 
     if (tablesToProcess.size() == 1) {
-		cout<< "inside one table query" <<endl;
-		// allTableReaderWriters[tablesToProcess[0].first]->getTable()->getSchema()->setAtts(tablesToProcess[0].second);
-		cout << allTableReaderWriters[tablesToProcess[0].first]->getTable()->getSchema() << endl;
         MyDB_TablePtr table = allTables[tablesToProcess[0].first];
         MyDB_SchemaPtr selectSchema = make_shared<MyDB_Schema>();
         MyDB_SchemaPtr aggSchema = make_shared<MyDB_Schema>();
@@ -150,7 +147,6 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 		}
 	}
 
-	cout << "left schema: " << leftSchema << "\n";
 
 	// and see what we need from the right, and from the right
 	for (auto b: rightTable->getSchema ()->getAtts ()) {
@@ -172,7 +168,7 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 			cout << "right expr: " << ("[" + b.first + "]") << "\n";
 		}
 	}
-	cout << "right schema: " << rightSchema << "\n";
+
 		
 	// now we gotta figure out the top schema... get a record for the top
 	MyDB_Record myRec (totSchema);

@@ -49,10 +49,9 @@ MyDB_TableReaderWriterPtr LogicalAggregate :: execute () {
 //    } else {
 //        puts("File successfully deleted");
 //    }
-    MyDB_TableReaderWriterPtr inputTable = inputOp->execute(); 
-
     time_t start, stop;
     start = time(NULL);
+    MyDB_TableReaderWriterPtr inputTable = inputOp->execute(); 
 
     MyDB_SchemaPtr aggTempSchema = make_shared<MyDB_Schema>();
 
