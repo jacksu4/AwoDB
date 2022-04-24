@@ -50,7 +50,6 @@ void Aggregate :: run () {
 	for (auto &a : aggSchema->getAtts ())
 		combinedSchema->appendAtt (a);
 
-		cout << "Comes hear 0!!!" << endl;
 	// now, get an intput rec, an agg rec, and a combined rec
 	MyDB_RecordPtr inputRec = input->getEmptyRecord ();
 	MyDB_RecordPtr aggRec = make_shared <MyDB_Record> (aggSchema);
@@ -81,7 +80,6 @@ void Aggregate :: run () {
 	// in case there is not a grouping...
 	groupCheck = "bool[true]";
 
-		cout << "Comes hear 1!!!" << endl;
 	for (auto &s : groupings) {
 		string curClause = "== (" + s + ", [MyDB_GroupAtt" + to_string (i) + "])";
 		if (i == 0) {
@@ -99,10 +97,8 @@ void Aggregate :: run () {
 	// this will compute the final aggregate value for each output record
 	vector <func> finalAggComps;
 
-		cout << "Comes hear 2!!!" << endl;
 	i = 0;
 	for (auto &s : aggsToCompute) {
-		cout << "Current agg to compute: " << s.second << endl;
 		if (s.first == MyDB_AggType :: aggSum || s.first == MyDB_AggType :: aggAvg) {
 			aggComps.push_back (combinedRec->compileComputation ("+ (" + s.second + 
 				", [MyDB_AggAtt" + to_string (i) + "])"));
@@ -112,9 +108,7 @@ void Aggregate :: run () {
 		}
 
 		if (s.first == MyDB_AggType :: aggAvg) {
-			cout << "Before divide" << endl;
 			finalAggComps.push_back (combinedRec->compileComputation ("/ ([MyDB_AggAtt" + to_string (i++) + "], [MyDB_CntAtt])"));
-			cout << "After divide" << endl;
 		} else {
 			finalAggComps.push_back (combinedRec->compileComputation ("[MyDB_AggAtt" + to_string (i++) + "]"));
 		}
@@ -127,8 +121,8 @@ void Aggregate :: run () {
 	// at this point, we are ready to go!!
 	MyDB_RecordIteratorPtr myIter = input->getIterator (inputRec);
 	MyDB_AttValPtr zero = make_shared <MyDB_IntAttVal> ();
-		cout << "Comes hear 3!!!" << endl;
 	while (myIter->hasNext ()) {
+
 		myIter->getNext ();
 
 		// see if it is accepted by the preicate
@@ -201,7 +195,6 @@ void Aggregate :: run () {
 		}
 	}
 
-	cout << "Comes hear 4!!!" << endl;
 	// now, we have processed all of the database records... so we can output the aggregates
 	MyDB_RecordIteratorAltPtr myIterAgain = getIteratorAlt (allPages);	
 
@@ -215,6 +208,7 @@ void Aggregate :: run () {
 		for (i = 0; i < numGroups; i++) {
 			outRec->getAtt (i)->set (aggRec->getAtt (i));
 		}
+
 		// set the aggregate atts
 		for (auto &a : finalAggComps) {
 			outRec->getAtt (i++)->set (a ());

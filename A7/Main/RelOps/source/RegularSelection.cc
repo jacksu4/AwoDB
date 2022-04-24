@@ -25,10 +25,39 @@ void RegularSelection :: run () {
 	}
 	func pred = inputRec->compileComputation (selectionPredicate);
 
+    // /************************************/
+	// if(selectionPredicate == "bool[true]") {
+	// 	MyDB_RecordPtr tempRec = input->getEmptyRecord();
+	// 	MyDB_RecordIteratorAltPtr tempIter = input->getIteratorAlt();	
+	// 	vector <func> computation;
+	// 	for (string s : projections) {
+	// 		computation.push_back (tempRec->compileComputation (s));
+	// 	}
+	// 	int tempSize = 0;
+	// 	while(tempIter->advance()) {
+	// 		tempIter->getCurrent(tempRec);
+	// 		// run all of the computations
+	// 		int i = 0;
+	// 		for (auto &f : computation) {
+	// 			cout << f();
+	// 		}
+	// 		cout << endl;
+	// 		tempSize++;
+	// 	}
+	// 	cout << "input size: " << tempSize << endl;
+	// }
+
+
+    // /************************************/
+
+
+
+
+
+
 	// now, iterate through the B+-tree query results
 	MyDB_RecordIteratorAltPtr myIter = input->getIteratorAlt ();
 	while (myIter->advance ()) {
-
 		myIter->getCurrent (inputRec);
 
 		// see if it is accepted by the predicate

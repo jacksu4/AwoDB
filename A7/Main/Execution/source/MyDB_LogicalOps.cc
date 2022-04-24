@@ -17,7 +17,7 @@
 //
 // Note that after the left and right hand sides have been executed, the temporary tables associated with the two 
 // sides should be deleted (via a kill to killFile () on the buffer manager)
-MyDB_TableReaderWriterPtr LogicalAggregate :: execute (MyDB_BufferManagerPtr mgr) {
+MyDB_TableReaderWriterPtr LogicalAggregate :: execute () {
 //    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
 //    string groupingString;
 //    if (groupings.size() == 1) {
@@ -49,65 +49,68 @@ MyDB_TableReaderWriterPtr LogicalAggregate :: execute (MyDB_BufferManagerPtr mgr
 //    } else {
 //        puts("File successfully deleted");
 //    }
-
-    MyDB_TableReaderWriterPtr inputTable = inputOp->execute(mgr);
+    MyDB_TableReaderWriterPtr inputTable = inputOp->execute(); 
 
     time_t start, stop;
     start = time(NULL);
 
-    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
     MyDB_SchemaPtr aggTempSchema = make_shared<MyDB_Schema>();
-    vector <ExprTreePtr> groupingList;
-    // for (auto b: outputTable->getTable()->getSchema ()->getAtts ()) {
-    //     // bool needIt = false;
-    //     // for (auto a: valuesToSelect) {
-    //     //     if (a->referencesAtt(tablesToProcess[0].second, b.first)) {
-    //     //         needIt = true;
-    //     //     }
-    //     // }
-    //     // if (needIt) {
-    //     //     selectSchema->appendAtt(make_pair(tablesToProcess[0].second + "_" + b.first, b.second));
-    //     //     exprs.push_back("[" + b.first + "]");
-    //     //     // cout << "expr: " << ("[" + b.first + "]") << "\n";
-    //     // }
-        
-    // }
-	// make_shared<MyDB_Table> ("table", "aggTemp", MyDB_SchemaPtr mySchema, string fileType, string sortAtt);
-    // MyDB_TableReaderWriterPtr aggOutputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
-    vector <string> groupingsStrings;
-    int sizeGroup = 0;
-    for(auto group : groupings) {
-        groupingsStrings.push_back(group->toString());
-        sizeGroup++;
-    }
-    cout << "Grouping size is: " << sizeGroup << endl;
 
+    vector <bool> isAggList;
+    vector <string> exprStrings;
+    vector <pair<string, MyDB_AttTypePtr>> groupingList;
+    vector <pair<string, MyDB_AttTypePtr>>  aggList;
+    vector <string> groupingsStrings;
     string selectionPredString = "bool[true]";
+    string reorderSelectionPred = "bool[true]";
     int countSelectionPred = 0;
     vector <pair <MyDB_AggType, string>> aggsToCompute;
-    for(auto expr : exprsToCompute) {
-        string exprString = expr->toString();
-        cout << "\nCurrent expression string: " << exprString << "\n" << endl;
+    vector <string> exprsForReorder;
+    
 
-        // Check if it is aggregation value
-        if(expr->hasAgg()) {
-            if(expr->isSum()) {
-                string childExpr = exprString.substr(4, exprString.size() - 5);
-                cout << "\nisSum: Current Child: " << childExpr << "\n" << endl;
-                aggsToCompute.push_back(make_pair (MyDB_AggType::aggSum, childExpr));
-            } else if(expr->isAvg()) {
-                string childExpr = exprString.substr(4, exprString.size() - 5);
-                cout << "\nisAvg: Current Child: " << childExpr << "\n" << endl;
-                aggsToCompute.push_back(make_pair (MyDB_AggType::aggAvg, childExpr));
+    int index = 0;
+    for (auto b: outputSpec->getSchema ()->getAtts ()) {
+        ExprTreePtr curExpr = exprsToCompute[index];
+        string exprString = curExpr->toString();
+        exprsForReorder.push_back("[" + b.first + "]");
+
+        if(curExpr->hasAgg()) {
+            if(curExpr->isAvg()) {
+                aggList.push_back(make_pair (b.first, make_shared <MyDB_DoubleAttType> ()));
+                aggsToCompute.push_back(make_pair (MyDB_AggType::aggAvg, exprString.substr(4, exprString.size() - 5)));
+            } else {
+                aggList.push_back(make_pair (b.first, b.second));
+                aggsToCompute.push_back(make_pair (MyDB_AggType::aggSum, exprString.substr(4, exprString.size() - 5)));
             }
+        } else {
+            groupingList.push_back(make_pair (b.first, b.second));
+            groupingsStrings.push_back(exprString);
         }
-        // for (auto b: outputTable->getTable()->getSchema ()->getAtts ()) {
-        //     groupingList.push_back(make_pair (b.second, expr));
-        // }
+        
+        index++;
     }
-
-    Aggregate aggregate (inputTable, outputTable, aggsToCompute, groupingsStrings, selectionPredString);
+    for(auto g: groupingList) {
+        aggTempSchema->appendAtt(g);
+    }
+    for(auto a: aggList) {
+        aggTempSchema->appendAtt(a);
+    }
+    
+    MyDB_TableReaderWriterPtr aggOutputTable = make_shared<MyDB_TableReaderWriter>(make_shared<MyDB_Table> ("table", "aggTemp", aggTempSchema), make_shared <MyDB_BufferManager> (131072, 4028, "tempAggFile"));
+    
+    Aggregate aggregate (inputTable, aggOutputTable, aggsToCompute, groupingsStrings, selectionPredString);
     aggregate.run();
+
+    MyDB_BufferManagerPtr inputMgr = inputTable->getBufferMgr();
+    inputMgr->killTable(inputTable->getTable());
+
+    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, make_shared <MyDB_BufferManager> (131072, 4028, "AggFile"));
+
+    RegularSelection selection (aggOutputTable, outputTable, reorderSelectionPred, exprsForReorder);
+    selection.run();
+
+    MyDB_BufferManagerPtr aggTempMgr = aggOutputTable->getBufferMgr();
+    aggTempMgr->killTable(aggOutputTable->getTable());
 
     MyDB_RecordPtr rec = outputTable->getEmptyRecord();
     MyDB_RecordIteratorAltPtr iter = outputTable->getIteratorAlt();
@@ -153,7 +156,7 @@ pair <double, MyDB_StatsPtr> LogicalJoin :: cost () {
 // should use a heuristic to choose which input is to be hashed and which is to be scanned), and execute the join.
 // Note that after the left and right hand sides have been executed, the temporary tables associated with the two 
 // sides should be deleted (via a kill to killFile () on the buffer manager)
-MyDB_TableReaderWriterPtr LogicalJoin :: execute (MyDB_BufferManagerPtr mgr) {
+MyDB_TableReaderWriterPtr LogicalJoin :: execute () {
 //    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, mgr);
 //    string selectionPredString;
 //    if (outputSelectionPredicate.size() == 1) {
@@ -187,7 +190,7 @@ string LogicalTableScan :: cutPrefix(string input, string alias) {
 // is to somehow set things up so that if a B+-Tree is NOT used, that the table scan does not actually do anything,
 // and the selection predicate is handled at the level of the parent (by filtering, for example, the data that is
 // input into a join)
-MyDB_TableReaderWriterPtr LogicalTableScan :: execute (MyDB_BufferManagerPtr mgr) {
+MyDB_TableReaderWriterPtr LogicalTableScan :: execute () {
     
     time_t start, stop;
     start = time(NULL);

@@ -6,6 +6,7 @@
 #include "unordered_map"
 #include "ExprTree.h"
 #include "MyDB_AttType.h"
+#include "Aggregate.h"
 	
 // builds and optimizes a logical query plan for a SFW query, returning the logical query plan
 // 
@@ -30,6 +31,8 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
         vector<string> groupings;
 		vector<ExprTreePtr> topCNF;
         bool areAggs = false;
+		int aggCount = 0;
+		int groupCount = 0;
 //        vector<pair<MyDB_AggType, string>> aggsToCompute;
 //
 		for(auto v: valuesToSelect) {
@@ -38,19 +41,23 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 				areAggs = true;
 			}
 			bool isCount = true;
+        	string exprString = v->toString();
 			for (auto b: table->getSchema ()->getAtts ()) {
 				if(v->referencesAtt(tablesToProcess[0].second, b.first)) {
 					if(v->isAvg()) {
-						aggSchema->appendAtt(make_pair(v->toString(), make_shared <MyDB_DoubleAttType> ()));
+						aggSchema->appendAtt(make_pair("MyDB_Agg" + to_string(aggCount++), make_shared <MyDB_DoubleAttType> ()));
+					} else if (v->isSum()) {
+						aggSchema->appendAtt(make_pair("MyDB_Agg" + to_string(aggCount++), b.second));
 					} else {
-						aggSchema->appendAtt(make_pair(v->toString(), b.second));
+						aggSchema->appendAtt(make_pair("MyDB_Group" + to_string(groupCount++), b.second));
+            			groupings.push_back(exprString);
 					}
 					isCount = false;
 					break;
 				}
 			}
 			if(isCount) {
-				aggSchema->appendAtt(make_pair(v->toString(), make_shared <MyDB_IntAttType> ()));
+				aggSchema->appendAtt(make_pair("MyDB_Agg" + to_string(aggCount++), make_shared <MyDB_IntAttType> ()));
 			}
 		}
 
