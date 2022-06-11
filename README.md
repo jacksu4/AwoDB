@@ -1,5 +1,5 @@
-# AwoDB (Database Implementation in C++)
-**Self-built database that is able to store, retrieve and modify data**
+# AwoDB
+**Self-built database that is able to store, retrieve and modify data** (inside A7)
 
 ## Technique Used
 - **LFU (Least Frequently Used) Algorithm**
